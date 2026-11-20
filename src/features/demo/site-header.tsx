@@ -20,7 +20,7 @@ export function SiteHeader() {
         </Link>
       </nav>
       <Button asChild className="whatsapp-button">
-        <a href="https://wa.me/5562999396556" target="_blank" rel="noreferrer">
+        <a href="https://wa.me/5567984137155" target="_blank" rel="noreferrer">
           <MessageCircle /> WhatsApp da pizzaria
         </a>
       </Button>

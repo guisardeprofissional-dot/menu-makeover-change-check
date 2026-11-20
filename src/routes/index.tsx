@@ -133,7 +133,7 @@ function Home() {
               </p>
             </div>
             <Button asChild size="lg" className="whatsapp-button">
-              <a href="https://wa.me/5562999396556" target="_blank" rel="noreferrer">
+              <a href="https://wa.me/5567984137155" target="_blank" rel="noreferrer">
                 <MessageCircle /> Quero pedir de verdade <ArrowRight />
               </a>
             </Button>
@@ -196,7 +196,7 @@ function Home() {
             </h2>
           </div>
           <Button size="lg" asChild className="whatsapp-button">
-            <a href="https://wa.me/5562999396556" target="_blank" rel="noreferrer">
+            <a href="https://wa.me/5567984137155" target="_blank" rel="noreferrer">
               <MessageCircle /> Chamar no WhatsApp <ArrowRight />
             </a>
           </Button>
