@@ -66,7 +66,7 @@ export function chatMenu(menu: Menu) {
   }).filter(Boolean);
   const drinks = menu.drinks.filter((drink) => drink.enabled);
   if (drinks.length) sections.push(`*🥤 Bebidas*\n${drinks.map((drink) => `${drink.name} — ${money(drink.price)}`).join("\n")}`);
-  return `📋 *CARDÁPIO ABSOLLUTO PIZZARIA*\n\n${sections.join("\n\n")}\n\n${menu.notes}\n\n🍕😋 Qual pizza e tamanho você deseja? Pode escolher inteira ou meio a meio! 🤠🙏`;
+  return `📋 *CARDÁPIO ABSOLLUTO PIZZARIA*\n\n${sections.join("\n\n")}\n\n🍕😋 Qual pizza e tamanho você deseja? Pode escolher inteira ou meio a meio! 🤠🙏`;
 }
 export const total = (items: Line[], payment = "", fee = 0) =>
   Math.round(
