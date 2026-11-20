@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
+  ArrowUp,
   MessageCircle,
   Check,
   Clock,
@@ -140,11 +141,10 @@ function Home() {
           <div className="phone-stack">
             <Phone />
             <div className="phone-ctas">
-              <Button asChild size="lg" className="whatsapp-button phone-cta">
-                <a href="https://wa.me/5562999396556" target="_blank" rel="noreferrer">
-                  <MessageCircle /> Iniciei por aqui
-                </a>
-              </Button>
+              <div className="phone-hint" role="note">
+                <ArrowUp className="phone-hint-arrow" />
+                Digite o seu pedido acima
+              </div>
               <Button asChild size="lg" variant="outline" className="phone-cta">
                 <Link to="/painel">
                   Veja os seus pedidos · explore o painel <ArrowRight />

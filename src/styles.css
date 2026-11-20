@@ -1716,4 +1716,27 @@ p {
 .phone-stack { display: grid; gap: 16px; justify-self: center; width: 100%; max-width: 350px; }
 .phone-ctas { display: grid; gap: 12px; }
 .phone-cta { width: 100%; min-height: 56px; border-radius: 999px; font-size: 16px; font-weight: 700; }
+.phone-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 56px;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--brand-green, #25d366);
+  border: 2px dashed color-mix(in oklch, var(--brand-green, #25d366) 55%, transparent);
+  background: color-mix(in oklch, var(--brand-green, #25d366) 8%, transparent);
+  user-select: none;
+}
+.phone-hint-arrow {
+  width: 20px;
+  height: 20px;
+  animation: phone-hint-bounce 1.2s ease-in-out infinite;
+}
+@keyframes phone-hint-bounce {
+  0%, 100% { transform: translateY(4px); }
+  50% { transform: translateY(-4px); }
+}
 @media (max-width: 760px) { .phone-stack { max-width: 320px; width: 100%; min-width: 0; margin: 0 auto; } }
