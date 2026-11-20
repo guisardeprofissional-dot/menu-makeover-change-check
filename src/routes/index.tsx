@@ -137,7 +137,21 @@ function Home() {
               </a>
             </Button>
           </div>
-          <Phone />
+          <div className="phone-stack">
+            <Phone />
+            <div className="phone-ctas">
+              <Button asChild size="lg" className="whatsapp-button phone-cta">
+                <a href="https://wa.me/5562999396556" target="_blank" rel="noreferrer">
+                  <MessageCircle /> Iniciei por aqui
+                </a>
+              </Button>
+              <Button asChild size="lg" variant="outline" className="phone-cta">
+                <Link to="/painel">
+                  Veja os seus pedidos · explore o painel <ArrowRight />
+                </Link>
+              </Button>
+            </div>
+          </div>
         </section>
         <section className="operations">
           <div className="section-heading">
@@ -145,11 +159,6 @@ function Home() {
               <span className="eyebrow">DA CONVERSA À COZINHA</span>
               <h2>Tudo em seu lugar.</h2>
             </div>
-            <Button variant="outline" asChild>
-              <Link to="/painel">
-                Explorar o painel <ArrowRight />
-              </Link>
-            </Button>
           </div>
           <div className="operations-grid">
             {[
