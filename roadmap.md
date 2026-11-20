@@ -15,4 +15,4 @@
 - [x] Publicar as alterações.
 - [x] Corrigir pizza e tamanho enviados em mensagens separadas, sem pedir o sabor novamente.
 - [x] Ampliar telefone e escrita com moldura fina em celular e computador; verificar o pedido completo.
-- [ ] Publicar a correção do pedido e o telefone ampliado.
+- [x] Solicitar publicação da correção do pedido e do telefone ampliado.
