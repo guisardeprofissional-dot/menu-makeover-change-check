@@ -2,6 +2,37 @@ import { describe, it, expect } from "vitest";
 import { advance, blank, initialMenu, total, halfPrice, chatMenu, money } from "@/features/demo/engine";
 import reference from "@/data/pizzeria.json";
 describe("Website demo order rules", () => {
+  it("retains Vegetariana when the customer sends G in the next message", () => {
+    const first = advance(blank(), "Ola gostaria de uma pizza vegetariana", initialMenu, 0);
+    expect(first.c.items).toHaveLength(0);
+    const second = advance(first.c, "G", initialMenu, 0);
+    expect(second.c.items).toEqual([{ name: "Pizza Vegetariana G", qty: 1, price: 50 }]);
+    expect(second.c.pendingPizza).toBeUndefined();
+    expect(advance(second.c, "só isso", initialMenu, 0).c.step).toBe("name");
+  });
+  it("retains quantity and both half-pizza flavors until the size arrives", () => {
+    let c = advance(blank(), "2 pizzas meio a meio Calabresa e Peruana", initialMenu, 0).c;
+    c = advance(c, "cardápio", initialMenu, 0).c;
+    c = advance(c, "grande", initialMenu, 0).c;
+    expect(c.items).toHaveLength(1);
+    expect(c.items[0]?.qty).toBe(2);
+    expect(c.items[0]?.name).toContain("Calabresa");
+    expect(c.items[0]?.name).toContain("Peruana");
+    expect(c.items[0]?.name).toContain("G meio a meio");
+    expect(c.items[0]?.price).toBe(60.5);
+  });
+  it("also accepts the size before the flavor", () => {
+    const first = advance(blank(), "G", initialMenu, 0);
+    const second = advance(first.c, "Vegetariana", initialMenu, 0);
+    expect(second.c.items).toEqual([{ name: "Pizza Vegetariana G", qty: 1, price: 50 }]);
+  });
+  it("checks current availability when completing a pending pizza", () => {
+    const first = advance(blank(), "Vegetariana", initialMenu, 0);
+    const menu = structuredClone(initialMenu);
+    for (const item of menu.categories.flatMap((category) => category.items))
+      if (item.name === "Pizza Vegetariana G") item.enabled = false;
+    expect(advance(first.c, "G", menu, 0).c.items).toHaveLength(0);
+  });
   it("provides every available flavor, size, price and drink in the conversation", () => {
     const result = advance(blank(), "quero o cardápio", initialMenu, 0);
     for (const item of initialMenu.categories.flatMap((category) => category.items)) {

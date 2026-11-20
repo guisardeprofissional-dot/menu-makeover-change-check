@@ -30,6 +30,7 @@ export type Conversation = {
   payment: string;
   cash: number;
   editId?: number;
+  pendingPizza?: string;
 };
 export const blank = (): Conversation => ({
   step: "items",
@@ -211,16 +212,26 @@ export function advance(prev: Conversation, text: string, menu: Menu, fee: numbe
       reply = "👤 Qual é seu nome?" + partial();
     }
   } else {
-    const size = /\b(grande|g)\b/.test(t)
+    const readSize = (message: string) => /\b(grande|g)\b/.test(message)
       ? "G"
-      : /\b(media|m)\b/.test(t)
+      : /\b(media|m)\b/.test(message)
         ? "M"
-        : /\b(pequena|p)\b/.test(t)
+        : /\b(pequena|p)\b/.test(message)
           ? "P"
           : "";
     const all = menu.categories.flatMap((c) => c.items);
+    const hasFlavor = (message: string) => all.some((item) =>
+      message.includes(normalize(item.name.replace(/^Pizza /, "").slice(0, -2))),
+    );
+    // Complete the missing detail without discarding the customer's earlier choice.
+    let orderText = t;
+    if (c.pendingPizza && (
+      (readSize(t) && !hasFlavor(t)) ||
+      (!readSize(t) && hasFlavor(t) && readSize(c.pendingPizza))
+    )) orderText = `${c.pendingPizza} ${t}`;
+    const size = readSize(orderText);
     let found: MenuItem[] = [];
-    let rest = t;
+    let rest = orderText;
     for (const item of all
       .filter((i) => i.name.endsWith(` ${size}`))
       .sort((a, b) => b.name.length - a.name.length)) {
@@ -238,7 +249,7 @@ export function advance(prev: Conversation, text: string, menu: Menu, fee: numbe
     );
     const qty = Math.max(
       1,
-      Math.min(50, Number(t.match(/\b(\d{1,2})\s*(?:x|pizza|[a-z])/)?.[1] || 1)),
+      Math.min(50, Number(orderText.match(/\b(\d{1,2})\s*(?:x|pizza|[a-z])/)?.[1] || 1)),
     );
     if (drink) {
       if (!drink.enabled) reply = "Esse item está indisponível. Pode escolher outro?";
@@ -249,9 +260,10 @@ export function advance(prev: Conversation, text: string, menu: Menu, fee: numbe
           : "🥤 Adicionado! Deseja mais algo? Ou diga “só isso”." + partial();
       }
     } else if (found.length) {
+      delete c.pendingPizza;
       if (found.some((i) => i.enabled === false))
         reply = "Esse sabor está indisponível. Escolha outro, por favor.";
-      else if (found.length === 2 && found[0] && found[1] && /meio|metade/.test(t)) {
+      else if (found.length === 2 && found[0] && found[1] && /meio|metade/.test(orderText)) {
         c.items.push({
           name: `Pizza ${size} meio a meio ${found.map((i) => i.name.replace(/^Pizza /, "").slice(0, -2)).join(" / ")}`,
           price: halfPrice(found[0].price, found[1].price),
@@ -269,11 +281,13 @@ export function advance(prev: Conversation, text: string, menu: Menu, fee: numbe
           ? askReview()
           : offerMore();
       }
-    } else if (
-      !size &&
-      all.some((i) => t.includes(normalize(i.name.replace(/^Pizza /, "").slice(0, -2))))
-    )
-      reply = "🍕 Qual tamanho: P, M ou G? Envie o sabor junto com o tamanho.";
+    } else if (!size && hasFlavor(orderText)) {
+      c.pendingPizza = orderText;
+      reply = "🍕 Qual tamanho você deseja: P, M ou G?";
+    } else if (size) {
+      c.pendingPizza = orderText;
+      reply = "🍕 Qual sabor de pizza você deseja?";
+    }
     else
       reply =
         "🍕 Pode enviar o sabor completo e o tamanho? Exemplo: “1 Calabresa G”. Para conferir os sabores, digite “cardápio”.";

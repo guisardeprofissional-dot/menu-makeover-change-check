@@ -32,3 +32,4 @@ use the editor.
 - Keep extension regression tests beside the versioned extension logic; package revisions from the previous ZIP with only intentional replacements so unrelated assets stay unchanged.
 - Keep the website demo in an in-memory shared React provider with a deterministic, separately tested conversation engine; it must never import extension credentials or access live WhatsApp orders.
 - Use the extracted public menu data as the website's initial catalog; never import the extension bot module into the website because it contains private integration configuration.
+- Keep incomplete pizza choices in conversation state until the missing flavor or size arrives, and validate against the current catalog before adding an item; separate messages must not discard an earlier choice.
