@@ -6,3 +6,5 @@
 - [x] Painel administrativo de demonstração com pedidos, cardápio e configurações.
 
 - [x] Aplicar marca oficial Orbit e logotipo enviado, com Absolluto como demonstração.
+
+- [x] Ajustar a conversa ao padrão da extensão e apresentar o cardápio completo no telefone.

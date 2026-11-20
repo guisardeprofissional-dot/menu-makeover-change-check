@@ -49,6 +49,26 @@ export const normalize = (s: string) =>
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
 export const initialMenu: Menu = source.menu;
+export const defaultWelcome =
+  "Boa noite! 🤠🍕 Seja muito bem-vindo à Absolluto Pizzaria! Sabor que você sente, qualidade que você confia! 😋 Segue abaixo nosso cardápio: 📋🍕";
+export function chatMenu(menu: Menu) {
+  const sections = menu.categories.map((category) => {
+    const flavors = new Map<string, MenuItem[]>();
+    for (const item of category.items.filter((item) => item.enabled !== false)) {
+      const name = item.name.replace(/ [PMG]$/, "");
+      flavors.set(name, [...(flavors.get(name) ?? []), item]);
+    }
+    if (!flavors.size) return "";
+    return `*${category.name}*\n\n${[...flavors].map(([name, items]) => {
+      const prices = items.map((item) => `${item.name.match(/ [PMG]$/)?.[0]?.trim() ?? "Preço"}: ${money(item.price)}`).join(" · ");
+      const desc = items.find((item) => item.desc && item.desc !== "…")?.desc;
+      return `🍕 *${name.replace(/^Pizza /, "")}*\n${prices}${desc ? `\n${desc}` : ""}`;
+    }).join("\n\n")}`;
+  }).filter(Boolean);
+  const drinks = menu.drinks.filter((drink) => drink.enabled);
+  if (drinks.length) sections.push(`*🥤 Bebidas*\n${drinks.map((drink) => `${drink.name} — ${money(drink.price)}`).join("\n")}`);
+  return `📋 *CARDÁPIO ABSOLLUTO PIZZARIA*\n\n${sections.join("\n\n")}\n\n${menu.notes}\n\n🍕😋 Qual pizza e tamanho você deseja? Pode escolher inteira ou meio a meio! 🤠🙏`;
+}
 export const total = (items: Line[], payment = "", fee = 0) =>
   Math.round(
     (items.reduce((n, i) => n + i.qty * i.price, 0) +
@@ -71,7 +91,14 @@ export function advance(prev: Conversation, text: string, menu: Menu, fee: numbe
     return summary(c, c.zone === "retirada" ? 0 : fee);
   };
   const partial = () =>
-    `\n\n*Valor do pedido até agora: ${money(total(c.items, c.payment, c.zone === "retirada" ? 0 : fee))}*`;
+    `\n\n💰 *Valor do pedido até agora: ${money(total(c.items, c.payment, c.zone === "retirada" ? 0 : fee))}*`;
+  const offerMore = () =>
+    `🍕😋 Deseja *acrescentar mais alguma pizza*? 🥤 E para beber, vai querer alguma bebida? Temos: ${menu.drinks.filter((drink) => drink.enabled).map((drink) => `${drink.name} ${money(drink.price)}`).join(", ") || "nenhuma bebida disponível no momento"}. 😊🙏` + partial();
+  // Menu requests interrupt no order step, including payment and confirmation.
+  if (/\b(cardapio|menu)\b/.test(t) && !/\b(nao|sem)\b/.test(t))
+    return { c, reply: chatMenu(menu), confirmed: false };
+  if (/^(oi|ola|opa|bom dia|boa tarde|boa noite)[!. ]*$/.test(t))
+    return { c, reply: defaultWelcome + "\n\n" + chatMenu(menu), confirmed: false };
   if (c.step === "done") {
     if (/^(ok|obrigad|valeu)/.test(t))
       return {
@@ -115,12 +142,12 @@ export function advance(prev: Conversation, text: string, menu: Menu, fee: numbe
     else {
       c.phone = d;
       c.step = "delivery";
-      reply = "🏠 Vai ser entrega ou retirada no local?" + partial();
+      reply = "🏠🛵 O pedido será para *entrega* ou *retirada* no local? 🍕😊" + partial();
     }
   } else if (c.step === "name") {
     c.name = text.trim();
     c.step = "phone";
-    reply = "📞 Qual seu telefone com DDD?" + partial();
+    reply = "📞🙏 Para registrar seu pedido, pode informar seu telefone com DDD, por gentileza? 🍕😊" + partial();
   } else if (c.step === "delivery") {
     if (/retirada|buscar/.test(t)) {
       c.zone = "retirada";
@@ -150,7 +177,7 @@ export function advance(prev: Conversation, text: string, menu: Menu, fee: numbe
       c.payment = p;
       if (p === "dinheiro") {
         c.step = "cash";
-        reply = "💵 Troco para quanto? (ou diga sem troco)" + partial();
+        reply = "💵😊 *Troco para quanto?* (ou diga *sem troco*)" + partial();
       } else reply = askReview();
     }
   } else if (c.step === "cash") {
@@ -162,12 +189,7 @@ export function advance(prev: Conversation, text: string, menu: Menu, fee: numbe
       c.cash = v;
       reply = askReview();
     } else reply = "💵 Informe um valor que cubra o total do pedido." + partial();
-  } else if (/cardapio|menu/.test(t))
-    reply =
-      "📋 Temos pizzas salgadas, doces e bebidas! Veja todos os sabores e preços no cardápio do site. Qual pizza e tamanho você deseja?";
-  else if (/^(oi|ola|boa noite|bom dia)$/.test(t))
-    reply = "Olá! 🍕 Bem-vindo à Absolluto! Qual pizza e tamanho você deseja? Temos P, M e G.";
-  else if ((c.step === "edit" || c.step === "review") && /remov|tirar/.test(t)) {
+  } else if ((c.step === "edit" || c.step === "review") && /remov|tirar/.test(t)) {
     const match = c.items.findIndex((i) => t.includes(normalize(i.name.replace(/^Pizza /, ""))));
     if (match >= 0) {
       c.items.splice(match, 1);
@@ -238,7 +260,7 @@ export function advance(prev: Conversation, text: string, menu: Menu, fee: numbe
         });
         reply = c.name
           ? askReview()
-          : "🍕 Meio a meio adicionado! Vai querer mais uma pizza ou bebida?" + partial();
+          : offerMore();
       } else if (found.length > 1)
         reply =
           "Você quer uma pizza meio a meio ou duas pizzas inteiras? Envie “meio a meio” e os sabores com tamanho.";
@@ -246,7 +268,7 @@ export function advance(prev: Conversation, text: string, menu: Menu, fee: numbe
         c.items.push({ name: found[0].name, price: found[0].price, qty });
         reply = c.name
           ? askReview()
-          : "🍕 Pizza adicionada! Deseja mais alguma pizza ou bebida?" + partial();
+          : offerMore();
       }
     } else if (
       !size &&

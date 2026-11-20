@@ -7,10 +7,12 @@ import {
   type Conversation,
   type Chat,
   advance,
+  chatMenu,
+  defaultWelcome,
 } from "./engine";
 const welcome: Chat = {
   role: "bot",
-  text: "Olá! 🍕 Seja bem-vindo à Absolluto Pizzaria!\n\nSabor que você sente, qualidade que você confia. Qual pizza e tamanho você deseja?",
+  text: defaultWelcome + "\n\n" + chatMenu(initialMenu),
 };
 export type Settings = {
   bot: boolean;
@@ -35,7 +37,7 @@ function useDemoState() {
     fee: 0,
     pix: "43366274000101",
     holder: "Edivanilson Apóstolo de Araújo",
-    welcome: welcome.text,
+    welcome: defaultWelcome,
     closed: "No momento estamos fechados. Assim que abrirmos, é só mandar um oi! 🍕",
     autoPrint: false,
     paper: "80",
@@ -70,7 +72,7 @@ function useDemoState() {
   }
   function reset() {
     setConversation(blank());
-    setMessages([{ role: "bot", text: settings.welcome }]);
+    setMessages([{ role: "bot", text: settings.welcome + "\n\n" + chatMenu(menu) }]);
   }
   return {
     menu,

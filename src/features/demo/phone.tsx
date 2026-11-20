@@ -19,7 +19,10 @@ export function Phone() {
   const [input, setInput] = useState("");
   const log = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (log.current) log.current.scrollTop = log.current.scrollHeight;
+    const container = log.current;
+    const last = container?.lastElementChild;
+    if (container && last instanceof HTMLElement)
+      container.scrollTop = last.offsetTop - container.offsetTop;
   }, [messages]);
   return (
     <div className="phone-wrap">

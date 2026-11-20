@@ -1,7 +1,39 @@
 import { describe, it, expect } from "vitest";
-import { advance, blank, initialMenu, total, halfPrice } from "@/features/demo/engine";
+import { advance, blank, initialMenu, total, halfPrice, chatMenu, money } from "@/features/demo/engine";
 import reference from "@/data/pizzeria.json";
 describe("Website demo order rules", () => {
+  it("provides every available flavor, size, price and drink in the conversation", () => {
+    const result = advance(blank(), "quero o cardápio", initialMenu, 0);
+    for (const item of initialMenu.categories.flatMap((category) => category.items)) {
+      expect(result.reply).toContain(item.name.replace(/^Pizza /, "").replace(/ [PMG]$/, ""));
+      expect(result.reply).toContain(`${item.name.slice(-1)}: ${money(item.price)}`);
+    }
+    for (const drink of initialMenu.drinks) {
+      expect(result.reply).toContain(`${drink.name} — ${money(drink.price)}`);
+    }
+  });
+  it("keeps the active order step and data when the customer asks for the menu", () => {
+    for (const step of ["items", "name", "phone", "delivery", "address", "payment", "cash", "review", "done"]) {
+      const c = { ...blank(), step, name: "Lucas", items: [{ name: "Pizza Calabresa G", qty: 1, price: 56 }] };
+      const result = advance(c, "cardapio", initialMenu, 0);
+      expect(result.c).toEqual(c);
+      expect(result.confirmed).toBe(false);
+      expect(result.reply).toBe(chatMenu(initialMenu));
+    }
+  });
+  it("shows the current catalog on greeting and reflects availability and price edits", () => {
+    const menu = structuredClone(initialMenu);
+    menu.categories = [{ name: "Pizzas", items: [
+      { name: "Pizza Especial G", price: 72, desc: "", enabled: true },
+      { name: "Pizza Oculta P", price: 39, desc: "", enabled: false },
+    ] }];
+    menu.drinks[0] = { id: "suco", name: "Suco indisponível", price: 15, enabled: false };
+    const result = advance(blank(), "Olá", menu, 0);
+    expect(result.reply).toContain("Especial");
+    expect(result.reply).toContain("G: R$ 72,00");
+    expect(result.reply).not.toContain("Oculta");
+    expect(result.reply).not.toContain("Suco indisponível");
+  });
   it("preserves every source menu item and price", () => {
     expect(initialMenu.categories.flatMap((c) => c.items)).toHaveLength(69);
     expect(initialMenu.drinks).toHaveLength(5);
