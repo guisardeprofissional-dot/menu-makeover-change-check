@@ -1,6 +1,111 @@
-import {useState} from 'react';
-import {Search,Plus} from 'lucide-react';
-import {Button} from '@/components/ui/button';
-import {useDemo} from './store';
-import {money,normalize} from './engine';
-export function MenuView(){const {menu,send}=useDemo();const [tab,setTab]=useState(0);const [query,setQuery]=useState('');const items=tab<2?menu.categories[tab].items:[];const names=[...new Set(items.map(i=>i.name.slice(0,-2)))];return <section className="menu-section"><div className="section-heading"><div><span className="eyebrow">FEITA PARA CADA VONTADE</span><h2>Nosso cardápio.</h2></div><p>Seu sabor favorito, do seu jeito.<br/>Pizzas P, M e G · inteiras ou meio a meio.</p></div><div className="menu-toolbar"><div className="tabs">{['Salgadas','Doces','Bebidas'].map((t,i)=><Button key={t} variant={tab===i?'default':'ghost'} onClick={()=>setTab(i)}>{t}</Button>)}</div><div className="search"><Search size={18}/><input aria-label="Buscar no cardápio" placeholder="Buscar um sabor…" value={query} onChange={e=>setQuery(e.target.value)}/></div></div>{tab<2?<div className="pizza-grid">{names.filter(n=>normalize(n).includes(normalize(query))).map(n=>{const variants=items.filter(i=>i.name.slice(0,-2)===n);return <article className="pizza-item" key={n}><div className="pizza-item-top"><h3>{n.replace('Pizza ','')}</h3><span className="flavor-symbol">{tab===0?'🍕':'🍫'}</span></div><p>{variants.find(i=>i.desc!=='…')?.desc}</p><div className="size-prices">{variants.map(i=><Button key={i.name} variant="ghost" disabled={i.enabled===false} onClick={()=>{send(`1 ${i.name}`);document.getElementById('experience')?.scrollIntoView({behavior:'smooth'})}} aria-label={`Testar ${i.name}`}><span>{i.name.slice(-1)}</span><strong>{money(i.price)}</strong><Plus size={13}/></Button>)}</div>{variants.some(i=>i.enabled===false)&&<small className="unavailable">Há tamanho indisponível</small>}</article>})}</div>:<div className="drink-grid">{menu.drinks.filter(d=>normalize(d.name).includes(normalize(query))).map(d=><article className="pizza-item" key={d.id}><h3>🥤 {d.name}</h3><div className="drink-price"><strong>{money(d.price)}</strong><Button variant="outline" disabled={!d.enabled} onClick={()=>send(d.name)} aria-label={`Testar ${d.name}`}><Plus/></Button></div></article>)}</div>}<p className="menu-note">Meio a meio: metade do preço de cada sabor, no mesmo tamanho. Débito + R$ 2,00 · Crédito + R$ 2,50.</p></section>}
+import { useState } from "react";
+import { Search, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useDemo } from "./store";
+import { money, normalize } from "./engine";
+export function MenuView() {
+  const { menu, send } = useDemo();
+  const [tab, setTab] = useState(0);
+  const [query, setQuery] = useState("");
+  const items = tab < 2 ? (menu.categories[tab]?.items ?? []) : [];
+  const names = [...new Set(items.map((i) => i.name.slice(0, -2)))];
+  return (
+    <section className="menu-section">
+      <div className="section-heading">
+        <div>
+          <span className="eyebrow">FEITA PARA CADA VONTADE</span>
+          <h2>Nosso cardápio.</h2>
+        </div>
+        <p>
+          Seu sabor favorito, do seu jeito.
+          <br />
+          Pizzas P, M e G · inteiras ou meio a meio.
+        </p>
+      </div>
+      <div className="menu-toolbar">
+        <div className="tabs">
+          {["Salgadas", "Doces", "Bebidas"].map((t, i) => (
+            <Button key={t} variant={tab === i ? "default" : "ghost"} onClick={() => setTab(i)}>
+              {t}
+            </Button>
+          ))}
+        </div>
+        <div className="search">
+          <Search size={18} />
+          <input
+            aria-label="Buscar no cardápio"
+            placeholder="Buscar um sabor…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </div>
+      </div>
+      {tab < 2 ? (
+        <div className="pizza-grid">
+          {names
+            .filter((n) => normalize(n).includes(normalize(query)))
+            .map((n) => {
+              const variants = items.filter((i) => i.name.slice(0, -2) === n);
+              return (
+                <article className="pizza-item" key={n}>
+                  <div className="pizza-item-top">
+                    <h3>{n.replace("Pizza ", "")}</h3>
+                    <span className="flavor-symbol">{tab === 0 ? "🍕" : "🍫"}</span>
+                  </div>
+                  <p>{variants.find((i) => i.desc !== "…")?.desc}</p>
+                  <div className="size-prices">
+                    {variants.map((i) => (
+                      <Button
+                        key={i.name}
+                        variant="ghost"
+                        disabled={i.enabled === false}
+                        onClick={() => {
+                          send(`1 ${i.name}`);
+                          document
+                            .getElementById("experience")
+                            ?.scrollIntoView({ behavior: "smooth" });
+                        }}
+                        aria-label={`Testar ${i.name}`}
+                      >
+                        <span>{i.name.slice(-1)}</span>
+                        <strong>{money(i.price)}</strong>
+                        <Plus size={13} />
+                      </Button>
+                    ))}
+                  </div>
+                  {variants.some((i) => i.enabled === false) && (
+                    <small className="unavailable">Há tamanho indisponível</small>
+                  )}
+                </article>
+              );
+            })}
+        </div>
+      ) : (
+        <div className="drink-grid">
+          {menu.drinks
+            .filter((d) => normalize(d.name).includes(normalize(query)))
+            .map((d) => (
+              <article className="pizza-item" key={d.id}>
+                <h3>🥤 {d.name}</h3>
+                <div className="drink-price">
+                  <strong>{money(d.price)}</strong>
+                  <Button
+                    variant="outline"
+                    disabled={!d.enabled}
+                    onClick={() => send(d.name)}
+                    aria-label={`Testar ${d.name}`}
+                  >
+                    <Plus />
+                  </Button>
+                </div>
+              </article>
+            ))}
+        </div>
+      )}
+      <p className="menu-note">
+        Meio a meio: metade do preço de cada sabor, no mesmo tamanho. Débito + R$ 2,00 · Crédito +
+        R$ 2,50.
+      </p>
+    </section>
+  );
+}

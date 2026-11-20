@@ -1,6 +1,8 @@
 # Site de demonstração
-- [ ] Apresentação comercial e cardápio fiel à extensão.
-- [ ] Simulador de conversa e pedido, sem envio de pedidos reais.
-- [ ] Conferir valores, fluxo e apresentação em celular e computador.
+- [x] Apresentação comercial e cardápio fiel à extensão.
+- [x] Simulador de conversa e pedido, sem envio de pedidos reais.
+- [x] Conferir valores, fluxo e apresentação em celular e computador.
 
-- [ ] Painel administrativo de demonstração com pedidos, cardápio e configurações.
+- [x] Painel administrativo de demonstração com pedidos, cardápio e configurações.
+
+- [x] Aplicar marca oficial Orbit e logotipo enviado, com Absolluto como demonstração.
