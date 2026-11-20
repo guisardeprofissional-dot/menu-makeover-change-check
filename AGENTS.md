@@ -30,3 +30,5 @@ use the editor.
 <!-- LOVABLE:END -->
 
 - Keep extension regression tests beside the versioned extension logic; package revisions from the previous ZIP with only intentional replacements so unrelated assets stay unchanged.
+- Keep the website demo in an in-memory shared React provider with a deterministic, separately tested conversation engine; it must never import extension credentials or access live WhatsApp orders.
+- Use the extracted public menu data as the website's initial catalog; never import the extension bot module into the website because it contains private integration configuration.

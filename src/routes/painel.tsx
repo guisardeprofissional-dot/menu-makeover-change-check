@@ -1,0 +1,3 @@
+import {createFileRoute} from '@tanstack/react-router';
+import {AdminPanel} from '@/features/demo/admin';
+export const Route=createFileRoute('/painel')({head:()=>({meta:[{title:'Painel de demonstração | Absolluto Pizzaria'},{name:'description',content:'Experimente a gestão de pedidos, cardápio, finanças e configurações do atendente Absolluto.'},{property:'og:title',content:'Painel de teste da Absolluto'},{property:'og:description',content:'Um painel de demonstração sem dados reais ou conexão com a operação da pizzaria.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary_large_image'}]}),component:AdminPanel});

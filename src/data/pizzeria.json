@@ -1,0 +1,402 @@
+{
+  "business": {
+    "name": "Absolluto Pizzaria",
+    "slogan": "Sabor que você sente, qualidade que você confia!",
+    "address": "Rua Paranaíba - Setor Bueno, Damianópolis-GO",
+    "owner": "",
+    "phone": "5562999396556",
+    "phoneLabel": "(62) 9.9939-6556"
+  },
+  "menu": {
+    "categories": [
+      {
+        "name": "Pizzas Salgadas (P, M e G)",
+        "items": [
+          {
+            "name": "Pizza Moda da Casa P",
+            "price": 40,
+            "desc": "molho, mussarela, presunto, atum, calabresa, bacon, palmito, tomate, cebola, orégano, azeitona, catupiry"
+          },
+          {
+            "name": "Pizza Moda da Casa M",
+            "price": 48,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Moda da Casa G",
+            "price": 56,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Cuiabana P",
+            "price": 45,
+            "desc": "molho de tomate, mussarela, carne seca, banana frita, queijo coalho, pimenta biquinho, cebola, cream cheese, orégano, azeitona"
+          },
+          {
+            "name": "Pizza Cuiabana M",
+            "price": 50,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Cuiabana G",
+            "price": 65,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Peruana P",
+            "price": 45,
+            "desc": "molho de tomate, mussarela, frango desfiado, presunto, lombo canadense, calabresa, palmito, catupiry alto poró, cebola, mel, orégano, azeitona"
+          },
+          {
+            "name": "Pizza Peruana M",
+            "price": 50,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Peruana G",
+            "price": 65,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Vegetariana P",
+            "price": 40,
+            "desc": "molho de tomate, mussarela, palmito, pimentão, milho, ervilha, tomate, catupiry, cebola, orégano, azeitona"
+          },
+          {
+            "name": "Pizza Vegetariana M",
+            "price": 45,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Vegetariana G",
+            "price": 50,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Calabresa P",
+            "price": 40,
+            "desc": "molho de tomate, mussarela, calabresa, catupiry, cebola, orégano, azeitona"
+          },
+          {
+            "name": "Pizza Calabresa M",
+            "price": 46,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Calabresa G",
+            "price": 56,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Bacon P",
+            "price": 38,
+            "desc": "molho de tomate, mussarela, bacon, tomate, cebola, orégano, azeitona"
+          },
+          {
+            "name": "Pizza Bacon M",
+            "price": 43,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Bacon G",
+            "price": 52,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Bacon/Cheddar P",
+            "price": 39,
+            "desc": "molho de tomate, mussarela, bacon, tomate, cebola, orégano, azeitona, cheddar"
+          },
+          {
+            "name": "Pizza Bacon/Cheddar M",
+            "price": 44,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Bacon/Cheddar G",
+            "price": 53,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Mexicana P",
+            "price": 40,
+            "desc": "molho de tomate, mussarela, calabresa ralada, pimenta calabresa, tomate, cebola, orégano e azeitona"
+          },
+          {
+            "name": "Pizza Mexicana M",
+            "price": 45,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Mexicana G",
+            "price": 54,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Napolitana P",
+            "price": 36,
+            "desc": "molho de tomate, mussarela, pimentão, tomate, palmito, cebola, orégano, azeitona"
+          },
+          {
+            "name": "Pizza Napolitana M",
+            "price": 38,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Napolitana G",
+            "price": 48,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Quatro Queijos P",
+            "price": 34,
+            "desc": "molho de tomate, mussarela, queijo parmesão, catupiry, cheddar, orégano, azeitona"
+          },
+          {
+            "name": "Pizza Quatro Queijos M",
+            "price": 40,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Quatro Queijos G",
+            "price": 48,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Portuguesa P",
+            "price": 38,
+            "desc": "molho de tomate, mussarela, presunto, pimentão, ovo, ervilha, quatro queijo, cebola, orégano, azeitona"
+          },
+          {
+            "name": "Pizza Portuguesa M",
+            "price": 45,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Portuguesa G",
+            "price": 56,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Margarita P",
+            "price": 35,
+            "desc": "molho de tomate, mussarela, parmesão, tomate, orégano, azeitona"
+          },
+          {
+            "name": "Pizza Margarita M",
+            "price": 38,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Margarita G",
+            "price": 48,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Atum P",
+            "price": 38,
+            "desc": "molho de tomate, mussarela, atum, milho, cebola, orégano, azeitona"
+          },
+          {
+            "name": "Pizza Atum M",
+            "price": 40,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Atum G",
+            "price": 50,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Carne Seca/Catupiry P",
+            "price": 40,
+            "desc": "molho de tomate, mussarela, carne seca, catupiry, cream cheese, cebola, orégano, azeitona, pimenta biquinho"
+          },
+          {
+            "name": "Pizza Carne Seca/Catupiry M",
+            "price": 46,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Carne Seca/Catupiry G",
+            "price": 60,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Carne Seca/Especial P",
+            "price": 42,
+            "desc": "molho de tomate, mussarela, carne seca, bacon, quatro queijo, cream cheese, queijo coalho, cebola, orégano, azeitona, pimenta biquinho"
+          },
+          {
+            "name": "Pizza Carne Seca/Especial M",
+            "price": 48,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Carne Seca/Especial G",
+            "price": 65,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Frango/Catupiry P",
+            "price": 38,
+            "desc": "molho de tomate, mussarela, frango, catupiry, milho, cebola, orégano, azeitona"
+          },
+          {
+            "name": "Pizza Frango/Catupiry M",
+            "price": 45,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Frango/Catupiry G",
+            "price": 52,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Frango/Cheddar P",
+            "price": 39,
+            "desc": "molho de tomate, mussarela, frango, milho, cebola, orégano, azeitona, cheddar"
+          },
+          {
+            "name": "Pizza Frango/Cheddar M",
+            "price": 46,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Frango/Cheddar G",
+            "price": 53,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Frango/Especial P",
+            "price": 42,
+            "desc": "molho de tomate, mussarela, presunto, frango, bacon, milho, quatro queijo, cebola, orégano e azeitona"
+          },
+          {
+            "name": "Pizza Frango/Especial M",
+            "price": 48,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Frango/Especial G",
+            "price": 58,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Strogonofe P",
+            "price": 36,
+            "desc": "molho de tomate, mussarela, frango, creme de leite, batata palha, orégano, azeitona"
+          },
+          {
+            "name": "Pizza Strogonofe M",
+            "price": 45,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Strogonofe G",
+            "price": 53,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Lombo P",
+            "price": 40,
+            "desc": "molho de tomate, mussarela, lombo, bacon, tomate, quatro queijo, cebola, orégano, azeitona"
+          },
+          {
+            "name": "Pizza Lombo M",
+            "price": 50,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Lombo G",
+            "price": 60,
+            "desc": "…"
+          }
+        ]
+      },
+      {
+        "name": "Pizzas Doces (P, M e G)",
+        "items": [
+          {
+            "name": "Pizza Banana P",
+            "price": 38,
+            "desc": "mussarela, banana, leite condensado, creme de leite e canela"
+          },
+          {
+            "name": "Pizza Banana M",
+            "price": 40,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Banana G",
+            "price": 50,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Chocolate P",
+            "price": 36,
+            "desc": "mussarela, chocolate ao leite e chocolate branco"
+          },
+          {
+            "name": "Pizza Chocolate M",
+            "price": 45,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Chocolate G",
+            "price": 50,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Sonho de Valsa P",
+            "price": 38,
+            "desc": "mussarela, chocolate ao leite e bombom sonho de valsa"
+          },
+          {
+            "name": "Pizza Sonho de Valsa M",
+            "price": 45,
+            "desc": "…"
+          },
+          {
+            "name": "Pizza Sonho de Valsa G",
+            "price": 54,
+            "desc": "…"
+          }
+        ]
+      }
+    ],
+    "drinks": [
+      {
+        "id": "suco1l",
+        "name": "Suco 1L Maracujá",
+        "price": 15,
+        "enabled": true
+      },
+      {
+        "id": "coca2",
+        "name": "Refri 2L Coca",
+        "price": 13,
+        "enabled": true
+      },
+      {
+        "id": "coca15",
+        "name": "Refri 1,5L Coca",
+        "price": 11,
+        "enabled": true
+      },
+      {
+        "id": "fanta2",
+        "name": "Refri 2L Fanta",
+        "price": 11,
+        "enabled": true
+      },
+      {
+        "id": "guarana2",
+        "name": "Refri 2L Guaraná",
+        "price": 11,
+        "enabled": true
+      }
+    ],
+    "notes": "Absolluto Pizzaria. Funcionamento: de terça-feira a domingo, das 18h30 às 22h30 (fechado às segundas). Tamanhos P, M e G. Pizza meio a meio: 2 sabores; cada metade custa METADE do preço daquele sabor no tamanho escolhido e o valor da pizza é a soma das duas metades. Todas as pizzas existem nos tamanhos P, M e G. Se o cliente pedir só “carne seca” sem dizer qual, pergunte se é Carne Seca/Catupiry ou Carne Seca/Especial antes de anotar. Endereço: Rua Paranaíba - Setor Bueno, Damianópolis-GO. WhatsApp: (62) 9.9939-6556. Instagram: @absollutobg."
+  }
+}
