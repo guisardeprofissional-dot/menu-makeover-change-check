@@ -1737,3 +1737,5 @@ p {
     display: block;
   }
 }
+
+#lovable-badge {display: none !important;}
