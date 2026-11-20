@@ -9,7 +9,7 @@
 
 - [x] Ajustar a conversa ao padrão da extensão e apresentar o cardápio completo no telefone.
 
-- [ ] Cardápio sem descrições: lista enumerada com nome e valores P/M/G.
-- [ ] Celular: telefone com moldura e margens menores, parecendo aparelho real.
-- [ ] Celular: remover o texto grande do rodapé (Absolluto, funcionamento).
-- [ ] Publicar as alterações.
+- [x] Cardápio sem descrições: lista enumerada com nome e valores P/M/G.
+- [x] Celular: telefone com moldura e margens menores, parecendo aparelho real.
+- [x] Celular: remover o texto grande do rodapé (Absolluto, funcionamento).
+- [x] Publicar as alterações.
