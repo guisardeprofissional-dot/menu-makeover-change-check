@@ -27,21 +27,4 @@ export function SiteHeader() {
     </header>
   );
 }
-export function SiteFooter() {
-  return (
-    <footer className="site-footer">
-      <div>
-        <strong>ORBIT</strong>
-        <p>Seu atendimento. Uma conversa à frente.</p>
-      </div>
-      <div>
-        <p>Demonstração com o cardápio da Absolluto Pizzaria</p>
-        <p>Terça a domingo · 18h30 às 22h30 · Damianópolis–GO</p>
-      </div>
-      <a href="https://wa.me/5562999396556" target="_blank" rel="noreferrer">
-        WhatsApp da Absolluto ↗
-      </a>
-      <small>Atendimento e pedidos reais exclusivamente pelo WhatsApp.</small>
-    </footer>
-  );
-}
+

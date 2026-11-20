@@ -762,32 +762,9 @@ p {
   font-size: 46px;
 }
 .site-footer {
-  background: var(--ink);
-  color: var(--on-dark);
-  padding: 40px max(56px, calc((100vw - 1160px) / 2));
-  display: grid;
-  grid-template-columns: 1fr 1.3fr auto;
-  gap: 26px;
-  font-size: 12px;
-}
-.site-footer strong {
-  font-family: var(--font-display);
-  font-size: 27px;
-}
-.site-footer p {
-  font-size: 11px;
-  color: color-mix(in oklch, var(--on-dark) 65%, transparent);
-  margin-top: 4px;
-}
-.site-footer a {
-  align-self: center;
-  color: var(--brand-blue);
+  display: none;
 }
 .site-footer > small {
-  grid-column: 1/-1;
-  border-top: 1px solid var(--ink-muted);
-  padding-top: 20px;
-  color: color-mix(in oklch, var(--on-dark) 50%, transparent);
   font-size: 10px;
 }
 .menu-page {
@@ -1359,9 +1336,6 @@ p {
   .operations {
     padding: 55px 40px;
   }
-  .site-footer {
-    padding: 35px 40px;
-  }
   .admin {
     grid-template-columns: 195px 1fr;
   }
@@ -1534,11 +1508,6 @@ p {
   .closing-band h2 {
     font-size: 38px;
   }
-  .site-footer {
-    padding: 35px 24px;
-    grid-template-columns: 1fr;
-    gap: 18px;
-  }
   .menu-page {
     padding: 20px 20px 45px;
   }
@@ -1701,7 +1670,6 @@ p {
   .experience .phone { height: 78svh; min-height: 520px; border-width: 6px; border-radius: 34px; }
   .phone-ctas { padding: 0; min-width: 0; width: 100% !important; max-width: 320px !important; }
   .phone-cta { white-space: normal; text-align: center; padding: 8px 14px; height: auto; min-height: 52px; font-size: 15px; }
-  .site-footer { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   html {
@@ -1721,7 +1689,6 @@ p {
   .admin-sidebar,
   .admin-main,
   .site-header,
-  .site-footer,
   .modal-backdrop button,
   .order-modal select,
   .order-modal .form-label {

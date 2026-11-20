@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { MenuView } from "@/features/demo/menu";
-import { SiteHeader, SiteFooter } from "@/features/demo/site-header";
+import { SiteHeader } from "@/features/demo/site-header";
 export const Route = createFileRoute("/cardapio")({
   head: () => ({
     meta: [
@@ -32,7 +32,7 @@ function Page() {
         </div>
         <MenuView />
       </main>
-      <SiteFooter />
+
     </>
   );
 }

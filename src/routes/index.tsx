@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import hero from "@/assets/absolluto-pizzas.png.asset.json";
 import orbit from "@/assets/orbit-logo.png.asset.json";
 import { Phone } from "@/features/demo/phone";
-import { SiteHeader, SiteFooter } from "@/features/demo/site-header";
+import { SiteHeader } from "@/features/demo/site-header";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -202,7 +202,7 @@ function Home() {
           </Button>
         </section>
       </main>
-      <SiteFooter />
+
     </>
   );
 }
