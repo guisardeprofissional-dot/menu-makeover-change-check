@@ -44,15 +44,16 @@ export function MenuView() {
         <div className="pizza-grid">
           {names
             .filter((n) => normalize(n).includes(normalize(query)))
-            .map((n) => {
+            .map((n, index) => {
               const variants = items.filter((i) => i.name.slice(0, -2) === n);
               return (
                 <article className="pizza-item" key={n}>
                   <div className="pizza-item-top">
-                    <h3>{n.replace("Pizza ", "")}</h3>
+                    <h3>
+                      <span className="pizza-num">{index + 1}.</span> {n.replace("Pizza ", "")}
+                    </h3>
                     <span className="flavor-symbol">{tab === 0 ? "🍕" : "🍫"}</span>
                   </div>
-                  <p>{variants.find((i) => i.desc !== "…")?.desc}</p>
                   <div className="size-prices">
                     {variants.map((i) => (
                       <Button
