@@ -104,8 +104,7 @@ export function MenuView() {
         </div>
       )}
       <p className="menu-note">
-        Meio a meio: metade do preço de cada sabor, no mesmo tamanho. Débito + R$ 2,00 · Crédito +
-        R$ 2,50.
+        Meio a meio: metade do preço de cada sabor, no mesmo tamanho.
       </p>
     </section>
   );

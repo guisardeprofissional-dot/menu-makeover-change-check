@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { advance, blank, initialMenu, total, halfPrice, chatMenu, money } from "@/features/demo/engine";
+import { advance, blank, initialMenu, total, halfPrice, chatMenu, money, receiptDetails } from "@/features/demo/engine";
 import reference from "@/data/pizzeria.json";
 describe("Website demo order rules", () => {
   it("retains Vegetariana when the customer sends G in the next message", () => {
@@ -76,11 +76,40 @@ describe("Website demo order rules", () => {
   it("computes half of each flavor price", () => {
     expect(halfPrice(56, 65)).toBe(60.5);
   });
-  it("adds card fees without losing items", () => {
+  it("charges no debit surcharge", () => {
     const items = [{ name: "Pizza G", qty: 1, price: 56 }];
-    expect(total(items, "debito")).toBe(58);
-    expect(total(items, "credito")).toBe(58.5);
+    expect(total(items, "debito")).toBe(56);
+    expect(total(items, "debito", 5)).toBe(61);
+  });
+  it("charges no credit surcharge", () => {
+    const items = [{ name: "Pizza G", qty: 1, price: 56 }];
+    expect(total(items, "credito")).toBe(56);
     expect(total(items, "pix")).toBe(56);
+  });
+  it("uses PIX key 12345678", () => {
+    expect(receiptDetails({ ...blank(), payment: "pix" }, 0).pix?.key).toBe("12345678");
+  });
+  it("uses the PIX holder orbit pizzaria only for PIX payments", () => {
+    expect(receiptDetails({ ...blank(), payment: "pix" }, 0).pix?.holder).toBe("orbit pizzaria");
+    expect(receiptDetails({ ...blank(), payment: "debito" }, 0).pix).toBeUndefined();
+  });
+  it("counts pizzas rather than drinks and totals two half pizzas without card fees", () => {
+    const c = { ...blank(), payment: "debito", items: [
+      { name: "Pizza G meio a meio Calabresa/Quatro Queijos", qty: 1, price: 52 },
+      { name: "Pizza G meio a meio Napolitana/Strogonofe", qty: 1, price: 50.5 },
+      { name: "Refri", qty: 2, price: 11 },
+    ] };
+    expect(receiptDetails(c, 0).pizzaCount).toBe(2);
+    expect(total(c.items.slice(0, 2), "debito")).toBe(102.5);
+    expect(receiptDetails(c, 0).total).toBe(124.5);
+  });
+  it("retains each half price once in the order", () => {
+    const result = advance(blank(), "meio a meio Calabresa e Peruana G", initialMenu, 0);
+    expect(result.c.items[0]?.halves).toEqual([
+      { name: "Pizza Calabresa G", price: 28 },
+      { name: "Pizza Peruana G", price: 32.5 },
+    ]);
+    expect(result.c.items[0]?.price).toBe(60.5);
   });
   it("cash confirmation retains customer cash and change values", () => {
     let c = blank();

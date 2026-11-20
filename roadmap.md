@@ -16,3 +16,5 @@
 - [x] Corrigir pizza e tamanho enviados em mensagens separadas, sem pedir o sabor novamente.
 - [x] Ampliar telefone e escrita com moldura fina em celular e computador; verificar o pedido completo.
 - [x] Solicitar publicação da correção do pedido e do telefone ampliado.
+- [x] Resumo no modelo solicitado, com quantidade e detalhamento das metades.
+- [x] Remover taxas de cartão e incluir PIX informado; verificar totais no chat e painel.

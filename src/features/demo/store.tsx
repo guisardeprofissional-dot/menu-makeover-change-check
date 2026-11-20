@@ -9,6 +9,7 @@ import {
   advance,
   chatMenu,
   defaultWelcome,
+  defaultPix,
 } from "./engine";
 const welcome: Chat = {
   role: "bot",
@@ -35,8 +36,7 @@ function useDemoState() {
     bot: true,
     open: true,
     fee: 0,
-    pix: "43366274000101",
-    holder: "Edivanilson Apóstolo de Araújo",
+    ...defaultPix,
     welcome: defaultWelcome,
     closed: "No momento estamos fechados. Assim que abrirmos, é só mandar um oi! 🍕",
     autoPrint: false,
@@ -53,7 +53,7 @@ function useDemoState() {
         }
       : !settings.open
         ? { c: conversation, reply: settings.closed, confirmed: false }
-        : advance(conversation, text, menu, settings.fee);
+        : advance(conversation, text, menu, settings.fee, settings);
     setConversation(result.c);
     setMessages((m) => [...m, { role: "user", text }, { role: "bot", text: result.reply }]);
     if (result.confirmed) {

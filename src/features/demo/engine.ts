@@ -5,7 +5,11 @@ export type Menu = {
   drinks: { id: string; name: string; price: number; enabled: boolean }[];
   notes: string;
 };
-export type Line = { name: string; qty: number; price: number; obs?: string };
+export type Line = {
+  name: string; qty: number; price: number; obs?: string;
+  halves?: { name: string; price: number }[];
+};
+export const defaultPix = { pix: "12345678", holder: "orbit pizzaria" };
 export type Order = {
   id: number;
   name: string;
@@ -69,26 +73,33 @@ export function chatMenu(menu: Menu) {
   if (drinks.length) sections.push(`*🥤 Bebidas*\n${drinks.map((drink) => `${drink.name} — ${money(drink.price)}`).join("\n")}`);
   return `📋 *CARDÁPIO ABSOLLUTO PIZZARIA*\n\n${sections.join("\n\n")}\n\n🍕😋 Qual pizza e tamanho você deseja? Pode escolher inteira ou meio a meio! 🤠🙏`;
 }
-export const total = (items: Line[], payment = "", fee = 0) =>
-  Math.round(
-    (items.reduce((n, i) => n + i.qty * i.price, 0) +
-      fee +
-      (payment === "debito" ? 2 : payment === "credito" ? 2.5 : 0)) *
-      100,
-  ) / 100;
+export const total = (items: Line[], _payment = "", fee = 0) =>
+  Math.round((items.reduce((n, i) => n + i.qty * i.price, 0) + fee) * 100) / 100;
 export const halfPrice = (a: number, b: number) => Math.round(((a + b) / 2) * 100) / 100;
-export function summary(c: Conversation, fee: number) {
-  const sum = total(c.items, c.payment, fee);
-  return `📋 Confira seu pedido:\n\n${c.items.map((i) => `${i.qty}x ${i.name} — ${money(i.qty * i.price)}${i.obs ? "\n" + i.obs : ""}`).join("\n")}\n\n👤 ${c.name}\n📞 ${c.phone}\n🏠 ${c.zone === "retirada" ? "Retirada no local" : c.address}\n🚚 Entrega: ${money(fee)}\n💳 ${c.payment.toUpperCase()}${c.payment === "debito" ? " (+ R$ 2,00)" : c.payment === "credito" ? " (+ R$ 2,50)" : ""}\n${c.payment === "dinheiro" ? `💵 Valor em dinheiro do cliente: ${money(c.cash || sum)}\n🪙 Valor do troco a entregar: ${money(c.cash ? c.cash - sum : 0)}\n` : ""}\n*Total: ${money(sum)}*\n\nEstá tudo certinho? Digite OK para confirmar ou ALTERAR para mudar. 🍕`;
+export function receiptDetails(c: Conversation, fee: number, pix = defaultPix) {
+  return {
+    pizzaCount: c.items.filter((item) => item.name.startsWith("Pizza ")).reduce((n, item) => n + item.qty, 0),
+    total: total(c.items, c.payment, fee),
+    pix: c.payment === "pix" ? { key: pix.pix, holder: pix.holder } : undefined,
+  };
 }
-export function advance(prev: Conversation, text: string, menu: Menu, fee: number) {
+export function summary(c: Conversation, fee: number, pix = defaultPix) {
+  const receipt = receiptDetails(c, fee, pix);
+  const paymentLabel = { pix: "PIX", debito: "Cartão de débito", credito: "Cartão de crédito", dinheiro: "Dinheiro" }[c.payment] ?? c.payment;
+  const lines = c.items.map((item) => {
+    const halves = item.halves?.map((half) => `½ ${half.name.replace(/^Pizza /, "")} ${money(half.price)}`).join(" + ");
+    return `${item.name.startsWith("Pizza ") ? "🍕" : "🥤"} ${item.qty}x ${item.name} — ${money(item.qty * item.price)}${halves ? `\n\n   ${halves} = ${money(item.price)}` : ""}${item.obs ? `\n\n   ${item.obs}` : ""}`;
+  });
+  return `📋🍕 Confira seu pedido, por gentileza! 😊\n\n🍕 Quantidade de pizzas: ${receipt.pizzaCount}\n\n${lines.join("\n\n")}\n\n👤 ${c.name}\n\n🏠 ${c.zone === "retirada" ? "Retirada no local" : `Entrega: ${c.address}`}\n\n🚚 Taxa de entrega: ${money(fee)}\n\n💳 Pagamento: ${paymentLabel}${receipt.pix ? `\n\n🔑 PIX: ${receipt.pix.key}\n👤 Titular: ${receipt.pix.holder}` : ""}${c.payment === "dinheiro" ? `\n\n💵 Valor em dinheiro do cliente: ${money(c.cash || receipt.total)}\n🪙 Valor do troco a entregar: ${money(c.cash ? c.cash - receipt.total : 0)}` : ""}\n\n✅ *Total: ${money(receipt.total)}*\n\n🔎 Está tudo certo? Escreva OK para confirmar ou ALTERAR para mudar algo. 🙏🍕`;
+}
+export function advance(prev: Conversation, text: string, menu: Menu, fee: number, pix = defaultPix) {
   let c: Conversation = { ...prev, items: prev.items.map((i) => ({ ...i })) };
   const t = normalize(text.trim());
   let reply = "";
   let confirmed = false;
   const askReview = () => {
     c.step = "review";
-    return summary(c, c.zone === "retirada" ? 0 : fee);
+    return summary(c, c.zone === "retirada" ? 0 : fee, pix);
   };
   const partial = () =>
     `\n\n💰 *Valor do pedido até agora: ${money(total(c.items, c.payment, c.zone === "retirada" ? 0 : fee))}*`;
@@ -267,6 +278,7 @@ export function advance(prev: Conversation, text: string, menu: Menu, fee: numbe
         c.items.push({
           name: `Pizza ${size} meio a meio ${found.map((i) => i.name.replace(/^Pizza /, "").slice(0, -2)).join(" / ")}`,
           price: halfPrice(found[0].price, found[1].price),
+          halves: found.map((item) => ({ name: item.name, price: item.price / 2 })),
           qty,
         });
         reply = c.name
