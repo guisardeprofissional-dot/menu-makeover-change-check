@@ -383,25 +383,6 @@ export function AdminPanel() {
                         }))
                       }
                     />
-                    <input
-                      aria-label={`Descrição ${item.name}`}
-                      value={item.desc}
-                      onChange={(e) =>
-                        setMenu((m) => ({
-                          ...m,
-                          categories: m.categories.map((c, k) =>
-                            k === ci
-                              ? {
-                                  ...c,
-                                  items: c.items.map((it, j) =>
-                                    j === ii ? { ...it, desc: e.target.value } : it,
-                                  ),
-                                }
-                              : c,
-                          ),
-                        }))
-                      }
-                    />
                     <Button
                       variant="ghost"
                       size="icon"

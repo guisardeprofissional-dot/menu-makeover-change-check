@@ -61,8 +61,7 @@ export function chatMenu(menu: Menu) {
     if (!flavors.size) return "";
     return `*${category.name}*\n\n${[...flavors].map(([name, items]) => {
       const prices = items.map((item) => `${item.name.match(/ [PMG]$/)?.[0]?.trim() ?? "Preço"}: ${money(item.price)}`).join(" · ");
-      const desc = items.find((item) => item.desc && item.desc !== "…")?.desc;
-      return `🍕 *${name.replace(/^Pizza /, "")}*\n${prices}${desc ? `\n${desc}` : ""}`;
+      return `🍕 *${name.replace(/^Pizza /, "")}*\n${prices}`;
     }).join("\n\n")}`;
   }).filter(Boolean);
   const drinks = menu.drinks.filter((drink) => drink.enabled);
