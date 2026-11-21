@@ -289,6 +289,70 @@ export function parseAi(txt) {
 	return { reply: t };
 }
 
+// A failed AI request must not leave the customer waiting for a reply that will never arrive.
+// Only explicit catalog choices and answers to the current question are recovered locally.
+function recoverConversation(s, input, menu, phone) {
+	const text = norm(input);
+	const draft = s.draftOrder || s.lastOrder;
+	const order = draft ? JSON.parse(JSON.stringify(draft)) : { name: "", phone: "", items: [], drinks: [], zone: "", address: "", payment: "" };
+	order.phone = phone || order.phone;
+	const result = (reply, extra = {}) => ({ reply, order: order.items.length || order.drinks.length ? order : null, ...extra });
+	const question = (reply, pendingPizza = s.pendingPizza) => ({ reply, recoveryQuestion: true, pendingPizza });
+	if (/\b(troca|trocar|tira|tirar|remove|remover|altera|alterar|cancela|cancelar)\b/.test(text) || s.editing || s.amendOrderId)
+		return question("⚠️ A IA está indisponível para interpretar essa alteração. Seu pedido foi preservado; aguarde o atendente para ajustar com segurança. 🙏🍕");
+	switch (s.recoveryStep) {
+		case "phone": {
+			const value = customerPhone(input);
+			if (!value) return question("📞 Informe seu telefone com DDD, por gentileza. 🙏🍕");
+			order.phone = value;
+			return result("");
+		}
+		case "name":
+			if (input.trim().length < 2 || /\d/.test(input)) return question("👤 Qual é seu nome, por gentileza? 😊🙏");
+			order.name = input.trim();
+			return result("");
+		case "delivery":
+			if (/\b(retirada|buscar)\b/.test(text)) { order.zone = "retirada"; order.address = "Retirada no local"; }
+			else if (/\b(entrega|entregar)\b/.test(text)) order.zone = "entrega";
+			else return question("🏠 O pedido será para entrega ou retirada no local? 🍕😊");
+			return result("");
+		case "address":
+			if (!deliveryReady(input)) return question(LOCATION_REQUEST);
+			order.address = input;
+			return result("");
+		case "payment": {
+			const payment = PAYS.find((p) => new RegExp(`\\b${p}\\b`).test(text));
+			if (!payment || payment === "cartao") return question("💳 Escolha PIX, débito, crédito ou dinheiro. 😊🙏");
+			order.payment = payment;
+			return result("");
+		}
+		case "cash": {
+			if (/sem troco|exato|^nao$/.test(text)) { order.changeFor = 0; return result(""); }
+			const match = input.match(/^\s*(?:r\$\s*)?(\d+(?:[.,]\d{1,2})?)\s*$/i);
+			if (!match) return question("💵 Troco para quanto? Informe o valor ou diga sem troco. 😊🙏");
+			order.changeFor = Number(match[1].replace(",", "."));
+			return result("");
+		}
+	}
+	const readSize = (v) => /\b(grande|g)\b/.test(norm(v)) ? "G" : /\b(media|m)\b/.test(norm(v)) ? "M" : /\b(pequena|p)\b/.test(norm(v)) ? "P" : "";
+	const flavors = [...new Set(menu.categories.flatMap((category) => category.items).map((item) => flavorKey(item.name.slice(0, -2))))];
+	const hasFlavor = (v) => flavors.some((flavor) => ` ${norm(v)} `.includes(` ${flavor} `));
+	const pending = s.pendingPizza || (!draft && readSize(input) && !hasFlavor(input) ? [...s.history].reverse().find((message) => message.role === "user" && hasFlavor(message.content) && !readSize(message.content))?.content : "");
+	const combined = pending && ((readSize(input) && !hasFlavor(input)) || (!readSize(input) && hasFlavor(input) && readSize(pending))) ? `${pending} ${input}` : input;
+	if (hasFlavor(combined)) {
+		if (!readSize(combined)) return question("🍕 Qual tamanho da pizza você deseja: P, M ou G? 😊🙏", combined);
+		const pizzas = requestedPizzas(combined, menu);
+		if (!pizzas.length) return question("🍕 É uma pizza meio a meio ou pizzas inteiras? Informe os sabores e o tamanho, por gentileza. 😊🙏", combined);
+		order.items.push(...pizzas);
+		return result("", { pendingPizza: null });
+	}
+	if (readSize(combined)) return question("🍕 Qual sabor você deseja nesse tamanho? 😊🙏", combined);
+	const drink = menu.drinks.find((d) => d.enabled && (text === norm(d.name) || text === norm(d.name.replace(/^(Refri |Suco )/, ""))));
+	if (drink) { order.drinks.push({ ...drink, qty: 1 }); return result(""); }
+	if (order.items.length && /^(nao|so isso|finalizar|continuar|sem bebida)$/.test(text)) return result("");
+	return question("⚠️ A IA está temporariamente indisponível. Para continuar, informe o sabor do cardápio e o tamanho P, M ou G. 🍕🙏");
+}
+
 export async function botStep(state, raw, c, menu, fetchImpl = fetch, contact = {}) {
 	c = { ...DEFAULT_CONFIG, ...c };
 	c.pixKey = c.pixKey || DEFAULT_CONFIG.pixKey;
@@ -337,7 +401,7 @@ export async function botStep(state, raw, c, menu, fetchImpl = fetch, contact = 
 	if (!base && !String(c.geminiKey || GEMINI_DEFAULT_KEY).trim()) return { state: s, replies: s.warned ? [] : ["Olá! 👋😄 Já vou te responder, só um instante! 🙏🍕"], ...(s.warned ? {} : { state: { ...s, warned: true } }) };
 
 	const history = [...s.history, { role: "user", content: input }].slice(-16);
-	let res;
+	let res, aiError;
 	try {
 		const gkey = String(c.geminiKey || GEMINI_DEFAULT_KEY).trim();
 		if (gkey) {
@@ -363,9 +427,13 @@ Telefone do cliente: ${customerPhone(contact.phone) || "não identificado; solic
 		if (!r.ok) throw new Error(res?.error || "HTTP " + r.status);
 		}
 	} catch (e) {
-		const wait = [s.warned ? "🤔🙏 Desculpe, não consegui entender direitinho. Pode repetir, por gentileza? 🍕😊" : "⏳ Só um instante! 🙏 Estou conferindo seu pedido e já te respondo. 🍕😊"];
-		const errState = { ...(s.warned ? s : { ...s, warned: true }), history: [...s.history, { role: "user", content: input }, ...(isFirst ? [{ role: "assistant", content: WELCOME }] : [])].slice(-16) };
-		return { state: errState, replies: isFirst ? [WELCOME, ...wait] : wait, error: String(e?.message ?? e), ...(isFirst ? { sendMenu: true } : {}) };
+		aiError = String(e?.message ?? e);
+		res = recoverConversation(s, input, menu, customerPhone(contact.phone));
+	}
+	if (!res.order && (!String(res.reply || "").trim() || /s[oó] um instante|estou conferindo.*j[aá].*respondo/i.test(String(res.reply))))
+		res = recoverConversation(s, input, menu, customerPhone(contact.phone));
+	if (res.recoveryQuestion) {
+		return { state: { ...s, step: "conversa", pendingPizza: res.pendingPizza, history: [...history, { role: "assistant", content: res.reply }] }, replies: [...(isFirst ? [WELCOME] : []), res.reply], ...(aiError ? { error: aiError } : {}), ...(isFirst ? { sendMenu: true } : {}) };
 	}
 	let reply = String(res.reply ?? "").trim();
 	/* Na 1ª mensagem as boas-vindas já cumprimentam: remove saudação genérica da IA. */
@@ -384,10 +452,14 @@ Telefone do cliente: ${customerPhone(contact.phone) || "não identificado; solic
 	if (res.sendMenu) return { state: { ...s, step: "conversa", history: [...history, { role: "assistant", content: "(cardápio PDF enviado)" }].slice(-16) }, replies: isFirst ? [WELCOME] : [], sendMenu: true };
 	if (reply) replies.push(reply);
 	if (isFirst) replies.unshift(WELCOME);
-	const next = { ...s, warned: false, step: "conversa", history: [...history, { role: "assistant", content: reply || "(cardápio enviado)" }].slice(-16) };
+	const next = { ...s, warned: false, step: "conversa", history: [...history, { role: "assistant", content: reply || "(cardápio enviado)" }].slice(-16), ...(res.pendingPizza === null ? { pendingPizza: undefined } : {}) };
 	let rawOrder = res.order;
 	const order = rawOrder ? buildOrder({ ...rawOrder, phone: customerPhone(contact.phone) || rawOrder.phone }, c, menu) : null;
-	if (order) next.draftOrder = order;
+	if (order) {
+		next.draftOrder = order;
+		if (aiError || res.pendingPizza === null) next.pizzaItems = order.items.map((item) => ({ ...item }));
+	}
+	const diagnostic = aiError ? { error: aiError } : {};
 	// Never ask for OK unless a structured, validated draft is actually saved.
 	if (!order && /confira|confirmar|confirmação|pedido atualizado|pedido.*prepar|número de pedido/i.test(reply)) {
 		const ask = "⏳🍕 Estou conferindo as alterações do seu pedido. Pode repetir a última alteração, por gentileza? 🙏😊";
@@ -395,17 +467,17 @@ Telefone do cliente: ${customerPhone(contact.phone) || "não identificado; solic
 	}
 	if (order && !order.phone) {
 		const ask = "📞🙏 Para registrar seu pedido, pode informar seu telefone com DDD, por gentileza? 🍕😊";
-		return { state: { ...next, history: [...history, { role: "assistant", content: ask }].slice(-16) }, replies: [...replies.filter((r) => r !== reply), ask], ...(isFirst ? { sendMenu: true } : {}) };
+		return { state: { ...next, recoveryStep: "phone", history: [...history, { role: "assistant", content: ask }].slice(-16) }, replies: [...replies.filter((r) => r !== reply), ask], ...diagnostic, ...(isFirst ? { sendMenu: true } : {}) };
 	}
 	const runTotal = order && ((order.items ?? []).length || (order.drinks ?? []).length) ? `\n\n💰 *Valor do pedido até agora: ${brl(orderTotal(order, c))}*` : "";
-	const askFor = (ask0) => { const ask = /total/i.test(ask0) ? ask0 : ask0 + runTotal; return { state: { ...next, history: [...history, { role: "assistant", content: ask }].slice(-16) }, replies: [...replies.filter((r) => r !== reply), ask], ...(isFirst ? { sendMenu: true } : {}) }; };
+	const askFor = (ask0, recoveryStep = "items") => { const ask = /total/i.test(ask0) ? ask0 : ask0 + runTotal; return { state: { ...next, recoveryStep, history: [...history, { role: "assistant", content: ask }].slice(-16) }, replies: [...replies.filter((r) => r !== reply), ask], ...diagnostic, ...(isFirst ? { sendMenu: true } : {}) }; };
 	if (order && !s.upsellAsked && !(order.drinks ?? []).length) {
 		const r0 = askFor(`🍕😋 Deseja *acrescentar mais alguma pizza*? 🥤 E para beber, vai querer alguma bebida? Temos: ${(menu.drinks ?? []).filter((d) => d.enabled).map((d) => `${d.name} ${brl(d.price)}`).join(", ") || "veja no cardápio"}. 😊🙏`);
 		r0.state.upsellAsked = true;
 		return r0;
 	}
-	if (order && !order.name) return askFor("👤😊 Para registrar o pedido, qual é o seu nome, por gentileza? 🍕🙏");
-	if (order && !order.zone) return askFor("🏠🛵 O pedido será para *entrega* ou *retirada* no local? 🍕😊");
+	if (order && !order.name) return askFor("👤😊 Para registrar o pedido, qual é o seu nome, por gentileza? 🍕🙏", "name");
+	if (order && !order.zone) return askFor("🏠🛵 O pedido será para *entrega* ou *retirada* no local? 🍕😊", "delivery");
 	/* Pizza sumiu do pedido sem o cliente pedir para tirar/trocar: confirma antes. */
 	const prevItems = s.pizzaItems ?? [];
 	const asksChange = /\b(tira|tirar|retira|retirar|remove|remover|exclui|excluir|cancela|cancelar|troca|trocar|muda|mudar|altera|alterar|substitui|substituir|no lugar|ao inves|ao invés|em vez|errado|errei|corrig)/i.test(input);
@@ -414,25 +486,28 @@ Telefone do cliente: ${customerPhone(contact.phone) || "não identificado; solic
 		const lost = prevItems.filter((p) => !order.items.some((i) => norm(i.name) === norm(p.name)));
 		if (lost.length) return askFor(`🤔🍕 Só para eu não errar: você quer *trocar* ${lost.map((p) => `a ${p.name}`).join(", ")} pelo que acabou de pedir, ou quer *acrescentar* mais uma pizza? 😊🙏`);
 	}
+	if (aiError && order && order.zone === "entrega" && !deliveryReady(order.address)) {
+		return askFor(LOCATION_REQUEST, "address");
+	}
 	if (order && order.payment === "dinheiro") {
 		const total = orderTotal(order, c);
 		const userMsgs = history.filter((m) => m.role === "user").slice(-3).map((m) => norm(m.content));
 		const noChange = userMsgs.some((t) => /(sem troco|nao (precis|quero|vou precisar)|nao$|^nao\b|troco nao|nao preciso|valor (certo|exato)|tenho trocado|dinheiro (certo|trocado)|nenhum)/.test(t));
 		const v = num0(order.changeFor);
-		if (v > 0 && v < total) { order.changeFor = undefined; return askFor(`💵🤔 O total do pedido é *${brl(total)}*. 💵 *Troco para quanto?*`); }
-		if (!(v > 0) && !noChange) return askFor(`💵😊 O total é *${brl(total)}*. 💵 *Troco para quanto?* (ou diga *sem troco*)`);
+		if (v > 0 && v < total) { order.changeFor = undefined; return askFor(`💵🤔 O total do pedido é *${brl(total)}*. 💵 *Troco para quanto?*`, "cash"); }
+		if (!(v > 0) && !noChange) return askFor(`💵😊 O total é *${brl(total)}*. 💵 *Troco para quanto?* (ou diga *sem troco*)`, "cash");
 		if (!(v > 0)) order.changeFor = undefined;
 	}
 	if (order && !order.payment) {
-		return askFor("💳😊 Qual será a forma de pagamento, por gentileza? *PIX*, *Cartão de crédito*, *Cartão de débito* ou *Dinheiro*? 🍕🙏");
+		return askFor("💳😊 Qual será a forma de pagamento, por gentileza? *PIX*, *Cartão de crédito*, *Cartão de débito* ou *Dinheiro*? 🍕🙏", "payment");
 	}
 	if (order && order.zone === "entrega" && !deliveryReady(order.address)) {
-		return askFor(LOCATION_REQUEST);
+		return askFor(LOCATION_REQUEST, "address");
 	}
 	if (order) {
 		const review = reviewOrder(order, c);
 		if (s.amendOrderId) return { state: { ...next, editing: false, pizzaItems: order.items.map((i) => ({ ...i })), pendingOrder: order, history: [...history, { role: "assistant", content: review }].slice(-16) }, replies: [review, ...(order.payment === "pix" && c.pixKey ? [c.pixKey, PIX_CONFIRM] : [])], updateOrder: { id: s.amendOrderId, order, draft: true } };
-		return { state: { ...next, editing: false, pizzaItems: order.items.map((i) => ({ ...i })), pendingOrder: order, history: [...history, { role: "assistant", content: review }].slice(-16) }, replies: [...(isFirst ? [WELCOME] : []), review, ...(order.payment === "pix" && c.pixKey ? [c.pixKey, PIX_CONFIRM] : [])], ...(isFirst ? { sendMenu: true } : {}) };
+		return { state: { ...next, recoveryStep: "review", editing: false, pizzaItems: order.items.map((i) => ({ ...i })), pendingOrder: order, history: [...history, { role: "assistant", content: review }].slice(-16) }, replies: [...(isFirst ? [WELCOME] : []), review, ...(order.payment === "pix" && c.pixKey ? [c.pixKey, PIX_CONFIRM] : [])], ...diagnostic, ...(isFirst ? { sendMenu: true } : {}) };
 	}
 	/* Nunca fica calado: se a IA não respondeu nada, pede para o cliente repetir. */
 	if (!replies.length) {

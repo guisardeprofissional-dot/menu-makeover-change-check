@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Absolluto Pizzaria - Painel de Pedidos",
-  "version": "2.9.1",
+  "version": "2.9.2",
   "description": "Absolluto Pizzaria: atendente com IA no WhatsApp, pedidos, impressão e cardápio. Sabor que você sente, qualidade que você confia!",
   "permissions": ["storage", "tabs", "debugger"],
   "host_permissions": ["https://web.whatsapp.com/*", "https://*.lovable.app/*", "https://*/*"],

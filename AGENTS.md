@@ -35,3 +35,4 @@ use the editor.
 - Keep incomplete pizza choices in conversation state until the missing flavor or size arrives, and validate against the current catalog before adding an item; separate messages must not discard an earlier choice.
 - Store half-pizza component prices on each order line at selection time; receipts must show the original calculation even if the catalog changes later.
 - Pass demo payment settings to the conversation engine and share its total calculation with the admin panel; payment details and amounts must stay consistent across views.
+- Recover explicit extension order answers through the same validation and confirmation path when AI fails; keep the failure visible in the panel rather than promising an unscheduled reply.

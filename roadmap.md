@@ -18,3 +18,4 @@
 - [x] Solicitar publicação da correção do pedido e do telefone ampliado.
 - [x] Resumo no modelo solicitado, com quantidade e detalhamento das metades.
 - [x] Remover taxas de cartão e incluir PIX informado; verificar totais no chat e painel.
+- [x] Corrigir a espera sem continuidade na extensão, testar o pedido e entregar pacote atualizado sem mudar o site.
