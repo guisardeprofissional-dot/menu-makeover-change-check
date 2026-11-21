@@ -1,5 +1,6 @@
 // Absolluto Pizzaria — atendimento por IA (sem dependência do Chrome; testável).
 import { customerPhone, deliveryReady, LOCATION_REQUEST, locationLink } from "./order-details.js";
+import { aiConnection, askPanel, connectionError } from "./ai-connection.js";
 export const BUSINESS = {
 	name: "Absolluto Pizzaria",
 	slogan: "Sabor que você sente, qualidade que você confia!",
@@ -10,12 +11,11 @@ export const BUSINESS = {
 };
 
 export const MAX_PROTEINS = 200;
-export const AI_TOKEN = "campeiro-atendente-2026";
 /* Endereço do site publicado onde a IA roda. Serve de padrão para quem instala a extensão
    sem configurar nada, e de reserva quando o campo fica em branco. */
 export const AI_DEFAULT_URL = "https://crave-to-cart-companion.lovable.app";
 
-export const GEMINI_DEFAULT_KEY = "AQ.Ab8RN6LioywV8dRg66obIIrInQJsqGzlW5WbDAEj27TWo86XzA";
+export const GEMINI_DEFAULT_KEY = "";
 /* Primeira mensagem da conversa: boas-vindas + cardápio em PDF, enviados juntos. */
 export const DEFAULT_WELCOME = "Boa noite! 🤠🍕 Seja muito bem-vindo à Absolluto Pizzaria! Sabor que você sente, qualidade que você confia! 😋 Segue abaixo nosso cardápio: 📋🍕";
 export const WELCOME = DEFAULT_WELCOME;
@@ -29,6 +29,7 @@ export const DEFAULT_CONFIG = {
 	ruralFee: 0,
 	aiUrl: AI_DEFAULT_URL,
 	geminiKey: GEMINI_DEFAULT_KEY,
+	hubToken: "",
 };
 
 const L = (cat, rows) => ({ name: cat, items: rows.map(([name, price, desc = ""]) => ({ name, price, desc })) });
@@ -350,7 +351,7 @@ function recoverConversation(s, input, menu, phone) {
 	const drink = menu.drinks.find((d) => d.enabled && (text === norm(d.name) || text === norm(d.name.replace(/^(Refri |Suco )/, ""))));
 	if (drink) { order.drinks.push({ ...drink, qty: 1 }); return result(""); }
 	if (order.items.length && /^(nao|so isso|finalizar|continuar|sem bebida)$/.test(text)) return result("");
-	return question("⚠️ A IA está temporariamente indisponível. Para continuar, informe o sabor do cardápio e o tamanho P, M ou G. 🍕🙏");
+	return question("🍕 Não consegui identificar essa opção. Informe o sabor do cardápio e o tamanho P, M ou G, por gentileza. 😊🙏");
 }
 
 export async function botStep(state, raw, c, menu, fetchImpl = fetch, contact = {}) {
@@ -366,7 +367,7 @@ export async function botStep(state, raw, c, menu, fetchImpl = fetch, contact = 
 	if (!Array.isArray(s.history)) s.history = [];
 	const input = String(raw ?? "").trim().slice(0, 1500);
 	const cmd = norm(input).replace(/^[^\n:]{1,30}:\s*/, "").trim();
-	if (/\b(cardapio|menu)\b/.test(cmd) && !/\b(nao|sem)\b/.test(cmd)) return { state: { ...s, history: [...s.history, { role: "user", content: input }, { role: "assistant", content: "(cardápio PDF enviado)" }].slice(-16) }, replies: s.history.length ? [] : [WELCOME], sendMenu: true };
+	if (/\b(cardapio|menu)\b/.test(cmd) && !/\b(nao|sem)\b/.test(cmd)) return { state: { ...s, history: [...s.history, { role: "user", content: input }, { role: "assistant", content: "(cardápio PDF enviado)" }] }, replies: s.history.length ? [] : [WELCOME], sendMenu: true };
 
 	if (s.step === "feito") {
 		if (/cancel|desist/.test(cmd)) return { state: s, replies: ["🛑 Recebemos seu pedido de cancelamento. 🙏 Um atendente vai confirmar em instantes. 📞"], request: { type: "cancelamento", text: input } };
@@ -397,14 +398,12 @@ export async function botStep(state, raw, c, menu, fetchImpl = fetch, contact = 
 	}
 	/* A IA monta a lista completa a cada mensagem; o código não soma pizzas por conta própria. */
 	s = { ...s, pendingOrder: undefined, pizzaItems: s.pizzaItems ?? [] };
-	const base = String(c.aiUrl || AI_DEFAULT_URL).trim().replace(/\/+$/, "");
-	if (!base && !String(c.geminiKey || GEMINI_DEFAULT_KEY).trim()) return { state: s, replies: s.warned ? [] : ["Olá! 👋😄 Já vou te responder, só um instante! 🙏🍕"], ...(s.warned ? {} : { state: { ...s, warned: true } }) };
-
-	const history = [...s.history, { role: "user", content: input }].slice(-16);
-	let res, aiError;
+	const history = [...s.history, { role: "user", content: input }];
+	let res, aiError, connection, aiResponseReceived = false;
 	try {
-		const gkey = String(c.geminiKey || GEMINI_DEFAULT_KEY).trim();
-		if (gkey) {
+		connection = await aiConnection(c, AI_DEFAULT_URL);
+		if (connection.provider === "gemini") {
+		const gkey = connection.key;
 		const ctx = { business: { name: BUSINESS.name, slogan: BUSINESS.slogan, deliveryFee: deliveryFee("entrega", c), pix: c.pixKey ? `${c.pixKey}${c.pixName ? ` (${c.pixName})` : ""}` : "" }, menu: menuForCustomer(menu), notes: `${menu.notes}
 ${LOCATION_REQUEST}
 Pizzas já solicitadas (preserve todas, salvo alteração explícita): ${JSON.stringify(s.pizzaItems ?? [])}
@@ -415,25 +414,21 @@ ${s.amendOrderId ? `ATUALIZAÇÃO DE PEDIDO JÁ CONFIRMADO: o cliente já fechou
 		}
 		}
 		else {
-		const r = await fetchImpl(base + "/api/public/atendente", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ token: AI_TOKEN, business: { name: BUSINESS.name, slogan: BUSINESS.slogan, deliveryFee: deliveryFee("entrega", c), pix: c.pixKey ? `${c.pixKey}${c.pixName ? ` (${c.pixName})` : ""}` : "" }, menu: menuForCustomer(menu), notes: `${menu.notes}
+		res = await askPanel(connection, { business: { name: BUSINESS.name, slogan: BUSINESS.slogan, deliveryFee: deliveryFee("entrega", c), pix: c.pixKey ? `${c.pixKey}${c.pixName ? ` (${c.pixName})` : ""}` : "" }, menu: menuForCustomer(menu), notes: `${menu.notes}
 ${LOCATION_REQUEST}
 Pizzas já solicitadas (preserve todas, salvo alteração explícita): ${JSON.stringify(s.pizzaItems ?? [])}.${s.amendOrderId ? " ATUALIZAÇÃO DE PEDIDO JÁ CONFIRMADO (lastOrder): o cliente quer mudar algo; sempre responda e gere order COMPLETO = pedido anterior + mudança." : ""} Gere order como rascunho para conferência; nunca finalize por conta própria.
-Telefone do cliente: ${customerPhone(contact.phone) || "não identificado; solicitar DDD e telefone"}${isFirst ? "\nAs boas-vindas e o cardápio já foram enviados pela extensão; NÃO cumprimente nem dê boas-vindas novamente, responda direto ao pedido." : ""}`, phone: customerPhone(contact.phone), lastOrder: s.lastOrder ?? null, history }),
-		});
-		res = await r.json().catch(() => ({}));
-		if (!r.ok) throw new Error(res?.error || "HTTP " + r.status);
+Telefone do cliente: ${customerPhone(contact.phone) || "não identificado; solicitar DDD e telefone"}${isFirst ? "\nAs boas-vindas e o cardápio já foram enviados pela extensão; NÃO cumprimente nem dê boas-vindas novamente, responda direto ao pedido." : ""}`, phone: customerPhone(contact.phone), lastOrder: s.draftOrder ?? s.lastOrder ?? null, history }, fetchImpl);
 		}
+		aiResponseReceived = Boolean(res.order || res.sendMenu || (String(res.reply || "").trim() && !/s[oó] um instante|estou conferindo.*j[aá].*respondo/i.test(String(res.reply))));
 	} catch (e) {
-		aiError = String(e?.message ?? e);
+		aiError = connectionError(e, connection);
 		res = recoverConversation(s, input, menu, customerPhone(contact.phone));
 	}
 	if (!res.order && (!String(res.reply || "").trim() || /s[oó] um instante|estou conferindo.*j[aá].*respondo/i.test(String(res.reply))))
 		res = recoverConversation(s, input, menu, customerPhone(contact.phone));
+	const diagnostic = aiError ? { error: aiError } : aiResponseReceived ? { aiProvider: connection?.provider } : {};
 	if (res.recoveryQuestion) {
-		return { state: { ...s, step: "conversa", pendingPizza: res.pendingPizza, history: [...history, { role: "assistant", content: res.reply }] }, replies: [...(isFirst ? [WELCOME] : []), res.reply], ...(aiError ? { error: aiError } : {}), ...(isFirst ? { sendMenu: true } : {}) };
+		return { state: { ...s, step: "conversa", pendingPizza: res.pendingPizza, history: [...history, { role: "assistant", content: res.reply }] }, replies: [...(isFirst ? [WELCOME] : []), res.reply], ...diagnostic, ...(isFirst ? { sendMenu: true } : {}) };
 	}
 	let reply = String(res.reply ?? "").trim();
 	/* Na 1ª mensagem as boas-vindas já cumprimentam: remove saudação genérica da IA. */
@@ -449,28 +444,27 @@ Telefone do cliente: ${customerPhone(contact.phone) || "não identificado; solic
 			.trim();
 	}
 	const replies = [];
-	if (res.sendMenu) return { state: { ...s, step: "conversa", history: [...history, { role: "assistant", content: "(cardápio PDF enviado)" }].slice(-16) }, replies: isFirst ? [WELCOME] : [], sendMenu: true };
+	if (res.sendMenu) return { state: { ...s, step: "conversa", history: [...history, { role: "assistant", content: "(cardápio PDF enviado)" }] }, replies: isFirst ? [WELCOME] : [], sendMenu: true, ...diagnostic };
 	if (reply) replies.push(reply);
 	if (isFirst) replies.unshift(WELCOME);
-	const next = { ...s, warned: false, step: "conversa", history: [...history, { role: "assistant", content: reply || "(cardápio enviado)" }].slice(-16), ...(res.pendingPizza === null ? { pendingPizza: undefined } : {}) };
+	const next = { ...s, warned: false, step: "conversa", history: [...history, { role: "assistant", content: reply || "(cardápio enviado)" }], ...(res.pendingPizza === null ? { pendingPizza: undefined } : {}) };
 	let rawOrder = res.order;
 	const order = rawOrder ? buildOrder({ ...rawOrder, phone: customerPhone(contact.phone) || rawOrder.phone }, c, menu) : null;
 	if (order) {
 		next.draftOrder = order;
 		if (aiError || res.pendingPizza === null) next.pizzaItems = order.items.map((item) => ({ ...item }));
 	}
-	const diagnostic = aiError ? { error: aiError } : {};
 	// Never ask for OK unless a structured, validated draft is actually saved.
 	if (!order && /confira|confirmar|confirmação|pedido atualizado|pedido.*prepar|número de pedido/i.test(reply)) {
 		const ask = "⏳🍕 Estou conferindo as alterações do seu pedido. Pode repetir a última alteração, por gentileza? 🙏😊";
-		return { state: { ...next, editing: true, history: [...history, { role: "assistant", content: ask }].slice(-16) }, replies: [ask] };
+		return { state: { ...next, editing: true, history: [...history, { role: "assistant", content: ask }] }, replies: [ask], ...diagnostic };
 	}
 	if (order && !order.phone) {
 		const ask = "📞🙏 Para registrar seu pedido, pode informar seu telefone com DDD, por gentileza? 🍕😊";
-		return { state: { ...next, recoveryStep: "phone", history: [...history, { role: "assistant", content: ask }].slice(-16) }, replies: [...replies.filter((r) => r !== reply), ask], ...diagnostic, ...(isFirst ? { sendMenu: true } : {}) };
+		return { state: { ...next, recoveryStep: "phone", history: [...history, { role: "assistant", content: ask }] }, replies: [...replies.filter((r) => r !== reply), ask], ...diagnostic, ...(isFirst ? { sendMenu: true } : {}) };
 	}
 	const runTotal = order && ((order.items ?? []).length || (order.drinks ?? []).length) ? `\n\n💰 *Valor do pedido até agora: ${brl(orderTotal(order, c))}*` : "";
-	const askFor = (ask0, recoveryStep = "items") => { const ask = /total/i.test(ask0) ? ask0 : ask0 + runTotal; return { state: { ...next, recoveryStep, history: [...history, { role: "assistant", content: ask }].slice(-16) }, replies: [...replies.filter((r) => r !== reply), ask], ...diagnostic, ...(isFirst ? { sendMenu: true } : {}) }; };
+	const askFor = (ask0, recoveryStep = "items") => { const ask = /total/i.test(ask0) ? ask0 : ask0 + runTotal; return { state: { ...next, recoveryStep, history: [...history, { role: "assistant", content: ask }] }, replies: [...replies.filter((r) => r !== reply), ask], ...diagnostic, ...(isFirst ? { sendMenu: true } : {}) }; };
 	if (order && !s.upsellAsked && !(order.drinks ?? []).length) {
 		const r0 = askFor(`🍕😋 Deseja *acrescentar mais alguma pizza*? 🥤 E para beber, vai querer alguma bebida? Temos: ${(menu.drinks ?? []).filter((d) => d.enabled).map((d) => `${d.name} ${brl(d.price)}`).join(", ") || "veja no cardápio"}. 😊🙏`);
 		r0.state.upsellAsked = true;
@@ -506,13 +500,13 @@ Telefone do cliente: ${customerPhone(contact.phone) || "não identificado; solic
 	}
 	if (order) {
 		const review = reviewOrder(order, c);
-		if (s.amendOrderId) return { state: { ...next, editing: false, pizzaItems: order.items.map((i) => ({ ...i })), pendingOrder: order, history: [...history, { role: "assistant", content: review }].slice(-16) }, replies: [review, ...(order.payment === "pix" && c.pixKey ? [c.pixKey, PIX_CONFIRM] : [])], updateOrder: { id: s.amendOrderId, order, draft: true } };
-		return { state: { ...next, recoveryStep: "review", editing: false, pizzaItems: order.items.map((i) => ({ ...i })), pendingOrder: order, history: [...history, { role: "assistant", content: review }].slice(-16) }, replies: [...(isFirst ? [WELCOME] : []), review, ...(order.payment === "pix" && c.pixKey ? [c.pixKey, PIX_CONFIRM] : [])], ...diagnostic, ...(isFirst ? { sendMenu: true } : {}) };
+		if (s.amendOrderId) return { state: { ...next, editing: false, pizzaItems: order.items.map((i) => ({ ...i })), pendingOrder: order, history: [...history, { role: "assistant", content: review }] }, replies: [review, ...(order.payment === "pix" && c.pixKey ? [c.pixKey, PIX_CONFIRM] : [])], updateOrder: { id: s.amendOrderId, order, draft: true }, ...diagnostic };
+		return { state: { ...next, recoveryStep: "review", editing: false, pizzaItems: order.items.map((i) => ({ ...i })), pendingOrder: order, history: [...history, { role: "assistant", content: review }] }, replies: [...(isFirst ? [WELCOME] : []), review, ...(order.payment === "pix" && c.pixKey ? [c.pixKey, PIX_CONFIRM] : [])], ...diagnostic, ...(isFirst ? { sendMenu: true } : {}) };
 	}
 	/* Nunca fica calado: se a IA não respondeu nada, pede para o cliente repetir. */
 	if (!replies.length) {
 		const ask = "🤔🙏 Desculpe, não entendi direitinho. Pode me explicar de novo, por gentileza? 🍕😊";
-		return { state: { ...next, history: [...history, { role: "assistant", content: ask }].slice(-16) }, replies: [ask], ...(isFirst ? { sendMenu: true } : {}) };
+		return { state: { ...next, history: [...history, { role: "assistant", content: ask }] }, replies: [ask], ...diagnostic, ...(isFirst ? { sendMenu: true } : {}) };
 	}
-	return { state: next, replies, ...(isFirst ? { sendMenu: true } : {}) };
+	return { state: next, replies, ...diagnostic, ...(isFirst ? { sendMenu: true } : {}) };
 }

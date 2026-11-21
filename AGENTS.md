@@ -36,3 +36,4 @@ use the editor.
 - Store half-pizza component prices on each order line at selection time; receipts must show the original calculation even if the catalog changes later.
 - Pass demo payment settings to the conversation engine and share its total calculation with the admin panel; payment details and amounts must stay consistent across views.
 - Recover explicit extension order answers through the same validation and confirmation path when AI fails; keep the failure visible in the panel rather than promising an unscheduled reply.
+- Resolve extension AI credentials per installation, use the panel's bearer pairing contract, and report connected status only after a real AI response; packaged credentials and optimistic status hide authorization failures.

@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600;700&display=swap" />
+<link rel="stylesheet" href="sidepanel.css" />
+<title>Absolluto Pizzaria</title>
+</head>
+<body>
+<header class="top">
+  <img src="logo.png" alt="Absolluto Pizzaria" class="logo" />
+  <div class="brand"><h1>Absolluto Pizzaria</h1><p>Painel do atendente</p></div>
+  <button id="botToggle" class="bot-toggle" type="button">🤖 ROBÔ LIGADO</button>
+  <span id="openPill" class="pill">Aberta</span>
+</header>
+<div class="layout">
+  <nav class="rail" id="rail">
+    <button data-tab="painel" title="Painel" aria-label="Painel" class="active"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></button>
+    <button data-tab="pedidos" title="Pedidos" aria-label="Pedidos"><svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9zM9 12h6M9 16h4"/></svg><b id="newCount" class="dot" hidden></b></button>
+    <button data-tab="robo" title="Robô de atendimento" aria-label="Robô de atendimento"><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4M9 13h.01M15 13h.01M2 13v2M22 13v2"/></svg></button>
+    <button data-tab="whats" title="Conectar WhatsApp" aria-label="Conectar WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-13.5 7.8L3 21l1.2-4.5A9 9 0 1 1 21 12z"/></svg></button>
+    <button data-tab="cardapio" title="Cardápio" aria-label="Cardápio"><svg viewBox="0 0 24 24"><path d="M4 18h16M5 18a7 7 0 0 1 14 0M12 11V9M10 9h4"/></svg></button>
+    <button data-tab="financas" title="Finanças" aria-label="Finanças"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M16 15h2"/></svg></button>
+    <button data-tab="config" title="Configurações" aria-label="Configurações"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg></button>
+  </nav>
+  <main>
+    <section id="tab-painel">
+      <h2 class="title">Painel</h2>
+      <div class="grid2" id="dash"></div>
+      <div class="card"><h3>Solicitações pendentes de clientes</h3><div id="pending"></div></div>
+      <div class="card"><h3>Fila em andamento</h3><div id="queue"></div></div>
+    </section>
+
+    <section id="tab-pedidos" hidden>
+      <h2 class="title">Pedidos</h2>
+      <div class="row-between"><h3 class="sub">Impressão</h3><button class="btn primary sm" id="printSel">🖨️ Imprimir</button></div>
+      <div class="ticket" id="ticket"></div>
+      <div class="chips" id="filters"></div>
+      <div id="orders"></div>
+      <div id="detail"></div>
+    </section>
+
+    <section id="tab-robo" hidden>
+      <h2 class="title">Atendente IA</h2>
+      <div class="card sim">
+        <div class="sim-h"><b>Teste a conversa com a IA</b><input id="simPhone" value="(73) 99999-0000" /><button class="btn ghost sm" id="simReset">↻ Nova conversa</button></div>
+        <p id="aiStatus" class="muted small">Verificando a IA…</p>
+        <div id="simLog" class="sim-log"><p class="muted c">Digite "oi" como se fosse o cliente no WhatsApp.</p></div>
+        <form id="simForm" class="sim-f"><input id="simInput" placeholder="Mensagem do cliente…" autocomplete="off" /><button class="btn primary sm">Enviar</button></form>
+      </div>
+    </section>
+
+    <section id="tab-whats" hidden>
+      <h2 class="title">Conectar WhatsApp</h2>
+      <div class="card">
+        <div class="wa-h"><svg viewBox="0 0 24 24" class="wa-ic"><path d="M21 12a9 9 0 0 1-13.5 7.8L3 21l1.2-4.5A9 9 0 1 1 21 12z"/></svg><div><h3>WhatsApp Web</h3><p class="muted" id="status">Verificando conexão…</p></div></div>
+        <button class="btn primary full" id="openWa">↗ Abrir WhatsApp Web</button>
+        <hr />
+        <div class="kv"><span>📡 <b>Robô ativo</b></span><label class="chk"><input type="checkbox" id="botEnabled" /> Ativar</label></div>
+        <div class="kv"><span>Lanchonete</span><label class="chk"><input type="checkbox" id="open" /> <span id="openLbl">Aberta</span></label></div>
+        <div class="kv"><span>Chave PIX</span><b class="link" id="pixShow"></b></div>
+        <hr />
+        <ol class="steps">
+          <li>Instale a extensão atualizada e recarregue o WhatsApp Web.</li>
+          <li>Conecte seu WhatsApp escaneando o QR Code.</li>
+          <li>O painel do Campeiro fica à esquerda e o WhatsApp à direita.</li>
+          <li>A IA atende sozinha, conversando com o cliente até fechar o pedido, sem precisar abrir. Arquivadas e grupos não são atendidos.</li>
+        </ol>
+        <p class="muted small">Pedidos confirmados aparecem em Pedidos, para acompanhar e imprimir.</p>
+      </div>
+      <div class="card"><h3>⏸️ Conversas pausadas</h3><div id="paused"></div></div>
+    </section>
+
+    <section id="tab-cardapio" hidden>
+      <h2 class="title">Cardápio</h2>
+      <div class="card accent">
+        <h3>🍔 Itens do cardápio</h3>
+        <p class="muted small">Edite nome, preço e descrição de cada item. Desmarque a caixinha quando o item <b>não estiver disponível</b> — a IA não oferece itens indisponíveis.</p>
+        <div id="menuEditor"></div>
+        <button class="btn sm" id="addCategory" type="button">➕ Adicionar categoria</button>
+      </div>
+      <div class="card">
+        <h3>📝 Informações extras para a IA</h3>
+        <p class="muted small">Promoções, regras, horários, bairros atendidos, etc.</p>
+        <textarea id="notes" rows="4"></textarea>
+      </div>
+      <div class="card">
+        <h3>🥤 Refrigerantes</h3>
+        <div id="drinks"></div>
+        <button class="btn sm" id="addDrink" type="button">➕ Adicionar bebida</button>
+      </div>
+      <button class="btn primary" id="saveMenu">💾 Salvar cardápio</button>
+      <p id="menuSaved" class="ok" hidden>Cardápio salvo! O robô já usa as novas opções.</p>
+    </section>
+
+    <section id="tab-financas" hidden>
+      <h2 class="title">Finanças</h2>
+      <div class="chips" id="period"></div>
+      <div class="grid2" id="finStats"></div>
+      <div class="card"><h3>Por forma de pagamento</h3><div id="byPay"></div></div>
+      <div class="card"><h3>Lançamentos</h3><div id="ledger"></div></div>
+    </section>
+
+    <section id="tab-config" hidden>
+      <h2 class="title">Configurações</h2>
+      <div class="card">
+        <h3>Configurações do robô</h3>
+        <label>Chave do Gemini (Google AI Studio)<input id="geminiKey" type="password" placeholder="AIza..." /></label>
+        <label>Endereço do atendente IA<input id="aiUrl" placeholder="https://seu-app.lovable.app" /></label>
+        <label>Chave de conexão do painel<input id="hubToken" type="password" autocomplete="off" placeholder="Chave criada em WhatsApp & teste" /></label>
+        <p class="muted small">Crie a chave no painel da IA, em WhatsApp & teste, e cole aqui. Não envie a chave pelo chat. Uma chave própria do Gemini continua disponível como alternativa.</p>
+        <label>Taxa de entrega (R$)<input id="ruralFee" type="number" step="0.5" min="0" /></label>
+        <p class="muted small">Coloque 0 se a entrega for grátis.</p>
+        <label>Chave PIX<input id="pixKey" /></label>
+        <label>Nome do titular PIX<input id="pixName" /></label>
+        <label>Primeira mensagem (boas-vindas)<textarea id="welcomeMessage" rows="4"></textarea></label>
+        <label>Mensagem quando fechado<textarea id="closedMessage" rows="3"></textarea></label>
+        <label class="chk"><input type="checkbox" id="autoPrint" /> Abrir impressão automaticamente em pedido novo</label>
+        <label>Largura do papel<select id="paper"><option value="80">80 mm</option><option value="58">58 mm</option></select></label>
+        <label>Tamanho da fonte do cupom<select id="fontSize"><option value="12">Normal (12)</option><option value="14">Média (14)</option><option value="16">Grande (16)</option><option value="18">Muito grande (18)</option><option value="20">Extra grande (20)</option></select></label>
+        <div class="btns"><button class="btn primary sm" id="saveConfig">Salvar</button><button class="btn ghost sm" id="testAi">Testar IA</button><button class="btn ghost sm" id="clearFinished">Limpar entregues e cancelados</button></div>
+        <p id="aiTestResult" class="muted small" role="status"></p>
+        <p id="configSaved" class="ok" hidden>Ajustes salvos!</p>
+      </div>
+      <footer class="info">Absolluto Pizzaria · Sabor que você sente, qualidade que você confia</footer>
+    </section>
+  </main>
+</div>
+<script type="module" src="sidepanel.js"></script>
+</body>
+</html>
